@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="{{ saved_theme or 'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Единая страница управления</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body class="admin-layout">
+    <div class="header-bar">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="header-logo">
+                    <h1 class="header-title">Управление данными</h1>
+                </div>
+                <div>
+                    <button id="theme-toggle" class="btn btn-light" style="border:none; background:none;"></button>
+
+                    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-light nav-btn me-2">
+                        <i class="bi bi-arrow-left"></i> Назад
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light nav-btn">
+                        <i class="bi bi-box-arrow-right"></i> Выход
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="left-panel">
+            <div class="form-container">
+                <div class="mb-3">
+                    <label for="entitySelector" class="form-label">Что редактировать</label>
+                     <select class="form-select" id="entitySelector">
+                         <option value="users_students">Студенты</option>
+                         <option value="users_teachers">Преподаватели</option>
+                         <option value="users_admins" selected>Администраторы</option>
+                         <option value="disciplines">Дисциплины</option>
+                         <option value="groups">Группы</option>
+                         <option value="specialties">Специальности</option>
+                         <option value="assign_teachers_disciplines">Преподаватели - Дисциплины</option>
+                         <option value="assign_specialties_disciplines">Специальности - Дисциплины</option>
+                         <option value="exams">Экзамены</option>
+                         <option value="departments">Кафедры</option>
+                         <option value="faculties">Факультеты</option>
+                     </select>
+                </div>
+
+                <!-- STUDENTS FORM -->
+                <div id="form_users_students" class="d-none">
+                    <div class="group-box">
+                        <h5>Информация о студенте</h5>
+                        <div class="mb-3">
+                            <label for="s_fio" class="form-label">ФИО</label>
+                            <input type="text" class="form-control" id="s_fio" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_login" class="form-label">Логин</label>
+                            <input type="text" class="form-control" id="s_login" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_password" class="form-label">Пароль</label>
+                            <input type="text" class="form-control" id="s_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Пол</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="s_gender" id="s_male" value="М" checked>
+                                    <label class="form-check-label" for="s_male">М</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="s_gender" id="s_female" value="Ж">
+                                    <label class="form-check-label" for="s_female">Ж</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_birth" class="form-label">Дата рождения</label>
+                            <input type="date" class="form-control" id="s_birth">
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_phone" class="form-label">Телефон</label>
+                            <input type="tel" class="form-control" id="s_phone">
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_email" class="form-label">Почта</label>
+                            <input type="email" class="form-control" id="s_email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_group" class="form-label">Группа</label>
+                            <input type="text" class="form-control" id="s_group" list="groups_students">
+                            <datalist id="groups_students"></datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TEACHER-DISCIPLINE ASSIGNMENTS FORM -->
+                <div id="form_assign_teachers_disciplines" class="d-none">
+                    <div class="group-box">
+                        <h5>Назначение преподавателей на дисциплины</h5>
+                        <div class="mb-3">
+                            <label for="atd_teacher" class="form-label">Преподаватель</label>
+                            <input type="text" class="form-control" id="atd_teacher" list="teachers_assign">
+                            <datalist id="teachers_assign"></datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="atd_discipline" class="form-label">Дисциплина</label>
+                            <input type="text" class="form-control" id="atd_discipline" list="disciplines_assign">
+                            <datalist id="disciplines_assign"></datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPECIALTY-DISCIPLINE ASSIGNMENTS FORM -->
+                <div id="form_assign_specialties_disciplines" class="d-none">
+                    <div class="group-box">
+                        <h5>Назначение дисциплин специальностям</h5>
+                        <div class="mb-3">
+                            <label for="asd_specialty" class="form-label">Специальность</label>
+                            <input type="text" class="form-control" id="asd_specialty" list="specialties_assign">
+                            <datalist id="specialties_assign"></datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="asd_discipline" class="form-label">Дисциплина</label>
+                            <input type="text" class="form-control" id="asd_discipline" list="disciplines_assign2">
+                            <datalist id="disciplines_assign2"></datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TEACHERS FORM -->
+                <div id="form_users_teachers" class="d-none">
+                    <div class="group-box">
+                        <h5>Информация о преподавателе</h5>
+                        <div class="mb-3">
+                            <label for="t_fio" class="form-label">ФИО</label>
+                            <input type="text" class="form-control" id="t_fio" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="t_login" class="form-label">Логин</label>
+                            <input type="text" class="form-control" id="t_login" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="t_password" class="form-label">Пароль</label>
+                            <input type="text" class="form-control" id="t_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Пол</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="t_gender" id="t_male" value="М" checked>
+                                    <label class="form-check-label" for="t_male">М</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="t_gender" id="t_female" value="Ж">
+                                    <label class="form-check-label" for="t_female">Ж</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="t_birth" class="form-label">Дата рождения</label>
+                            <input type="date" class="form-control" id="t_birth">
+                        </div>
+                        <div class="mb-3">
+                            <label for="t_phone" class="form-label">Телефон</label>
+                            <input type="tel" class="form-control" id="t_phone">
+                        </div>
+                        <div class="mb-3">
+                            <label for="t_email" class="form-label">Почта</label>
+                            <input type="email" class="form-control" id="t_email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="t_position" class="form-label">Должность</label>
+                            <input type="text" class="form-control" id="t_position" list="positions_teachers">
+                            <datalist id="positions_teachers">
+                                <option value="Профессор">
+                                <option value="Доцент">
+                                <option value="Старший преподаватель">
+                                <option value="Преподаватель">
+                                <option value="Ассистент">
+                            </datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="t_department" class="form-label">Кафедра</label>
+                            <input type="text" class="form-control" id="t_department" list="departments_teachers">
+                            <datalist id="departments_teachers"></datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMINS FORM -->
+                <div id="form_users_admins">
+                    <div class="group-box">
+                        <h5>Информация об администраторе</h5>
+                        <div class="mb-3">
+                            <label for="a_fio" class="form-label">ФИО</label>
+                            <input type="text" class="form-control" id="a_fio" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="a_login" class="form-label">Логин</label>
+                            <input type="text" class="form-control" id="a_login" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="a_password" class="form-label">Пароль</label>
+                            <input type="text" class="form-control" id="a_password" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DISCIPLINES FORM -->
+                <div id="form_disciplines" class="d-none">
+                    <div class="group-box">
+                        <h5>Информация о дисциплине</h5>
+                        <div class="mb-3">
+                            <label for="d_name" class="form-label">Название</label>
+                            <input type="text" class="form-control" id="d_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="d_lessons" class="form-label">Количество занятий</label>
+                            <input type="number" class="form-control" id="d_lessons" min="1" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GROUPS FORM -->
+                <div id="form_groups" class="d-none">
+                    <div class="group-box">
+                        <h5>Информация о группе</h5>
+                        <div class="mb-3">
+                            <label for="g_name" class="form-label">Название группы</label>
+                            <input type="text" class="form-control" id="g_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="g_specialty" class="form-label">Специальность</label>
+                            <input type="text" class="form-control" id="g_specialty" list="specialties" required>
+                            <datalist id="specialties"></datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="g_course" class="form-label">Курс</label>
+                            <input type="number" class="form-control" id="g_course" min="1" max="6" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="g_curator" class="form-label">Куратор</label>
+                            <input type="text" class="form-control" id="g_curator" list="teachers">
+                            <datalist id="teachers"></datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPECIALTIES FORM -->
+                <div id="form_specialties" class="d-none">
+                    <div class="group-box">
+                        <h5>Информация о специальности</h5>
+                        <div class="mb-3">
+                            <label for="s_id" class="form-label">ID специальности</label>
+                            <input type="text" class="form-control" id="s_id" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_name" class="form-label">Название специальности</label>
+                            <input type="text" class="form-control" id="s_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_level" class="form-label">Уровень образования</label>
+                            <select class="form-select" id="s_level" required>
+                                <option value="">Выберите уровень</option>
+                                <option value="СПО">СПО</option>
+                                <option value="Бакалавриат">Бакалавриат</option>
+                                <option value="Магистратура">Магистратура</option>
+                                <option value="Специалитет">Специалитет</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="s_department" class="form-label">Кафедра</label>
+                            <input type="text" class="form-control" id="s_department" list="departments_specialty">
+                            <datalist id="departments_specialty"></datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXAMS FORM -->
+                <div id="form_exams" class="d-none">
+                    <div class="group-box">
+                        <h5>Информация об экзамене</h5>
+                        <div class="mb-3">
+                            <label for="e_discipline" class="form-label">Дисциплина</label>
+                            <input type="text" class="form-control" id="e_discipline" list="disciplines" required>
+                            <datalist id="disciplines"></datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="e_teacher" class="form-label">Преподаватель</label>
+                            <input type="text" class="form-control" id="e_teacher" list="teachers_exam" required>
+                            <datalist id="teachers_exam"></datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="e_group" class="form-label">Группа</label>
+                            <input type="text" class="form-control" id="e_group" list="groups_exam" required>
+                            <datalist id="groups_exam"></datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="e_date" class="form-label">Дата экзамена</label>
+                            <input type="date" class="form-control" id="e_date" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DEPARTMENTS FORM -->
+                <div id="form_departments" class="d-none">
+                    <div class="group-box">
+                        <h5>Информация о кафедре</h5>
+                        <div class="mb-3">
+                            <label for="df_dep_name" class="form-label">Название кафедры</label>
+                            <input type="text" class="form-control" id="df_dep_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_dep_faculty" class="form-label">Факультет</label>
+                            <input type="text" class="form-control" id="df_dep_faculty" list="faculties" required>
+                            <datalist id="faculties"></datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_dep_head" class="form-label">Заведующий</label>
+                            <input type="text" class="form-control" id="df_dep_head">
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_dep_position" class="form-label">Должность</label>
+                            <input type="text" class="form-control" id="df_dep_position">
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_dep_email" class="form-label">Почта</label>
+                            <input type="email" class="form-control" id="df_dep_email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_dep_phone" class="form-label">Телефон</label>
+                            <input type="tel" class="form-control" id="df_dep_phone">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FACULTIES FORM -->
+                <div id="form_faculties" class="d-none">
+                    <div class="group-box">
+                        <h5>Информация о факультете</h5>
+                        <div class="mb-3">
+                            <label for="df_fac_name" class="form-label">Название факультета</label>
+                            <input type="text" class="form-control" id="df_fac_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_fac_dean" class="form-label">Декан</label>
+                            <input type="text" class="form-control" id="df_fac_dean">
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_fac_position" class="form-label">Должность</label>
+                            <input type="text" class="form-control" id="df_fac_position">
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_fac_email" class="form-label">Почта</label>
+                            <input type="email" class="form-control" id="df_fac_email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="df_fac_phone" class="form-label">Телефон</label>
+                            <input type="tel" class="form-control" id="df_fac_phone">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-primary" id="btn_save">Сохранить</button>
+                    <button type="button" class="btn btn-success" id="btn_edit">Изменить</button>
+                    <button type="button" class="btn btn-danger" id="btn_delete">Удалить</button>
+                    <button type="button" class="btn btn-secondary" id="btn_reload">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title">Список записей</h5>
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Поиск...">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="dataTable">
+                            <thead>
+                                <tr id="thead_row"></tr>
+                            </thead>
+                            <tbody id="tbody_rows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/admin_manage.js') }}"></script>
+ </body>
+ </html>

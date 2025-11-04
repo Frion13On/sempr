@@ -1,0 +1,515 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.5;
+    color: #333;
+    background-color: #f4f4f4;
+    scroll-behavior: smooth;
+    font-size: 1rem; 
+    padding-top: 70px; 
+    height: auto;
+    overflow-y: auto;
+}
+
+.login-layout .main-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 70px);
+}
+
+.login-layout .form-container {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+input[type="password"]::-ms-reveal {
+    display: none;
+}
+
+.login-layout .password-container {
+    position: relative;
+}
+
+.login-layout .password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 55%;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+/* Шапка */
+.header-bar {
+    background: #fff;
+    color: #333;
+    padding: 15px 0;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.header-logo {
+    height: 35px;
+    margin-right: 10px;
+}
+
+.header-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    color: #222;
+}
+
+/* Навигация */
+.nav-btn {
+    min-width: 80px;
+    background: transparent;
+    color: #555 !important;
+    font-weight: 600;
+    font-size: 0.8rem;
+    border: 2px solid transparent;
+    transition: color 0.3s ease, border-bottom 0.3s ease;
+    border-radius: 0;
+    padding: 4px 8px;
+}
+
+.nav-btn:hover {
+    color: #007bff !important;
+    border-bottom: 2px solid #007bff !important;
+    background: transparent !important;
+}
+
+/* Основной контейнер */
+.main-content, .container {
+    padding: 15px;
+    overflow: visible;
+}
+
+/* Карточки */
+.card {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+    font-size: 0.85em;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+/* Унифицированные карточки */
+.app-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1 1 100%;
+    min-height: 180px;
+}
+
+.app-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.app-card .card-body {
+    padding: 1rem;
+}
+
+.app-card .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 0.5rem;
+}
+
+.app-card .card-text {
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.app-card .card-icon {
+    font-size: 1.5rem;
+    color: #007bff;
+    margin-bottom: 0.5rem;
+}
+
+/* Карточки в строках */
+.cards-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.cards-row > .col {
+    display: flex;
+}
+
+.cards-row > .col > .app-card {
+    flex: 1 1 100%;
+}
+
+/* Адаптивность */
+@media (min-width: 576px) {
+    .cards-row > .col {
+        flex: 1 1 calc(50% - 1rem);
+    }
+}
+
+@media (min-width: 992px) {
+    .cards-row > .col {
+        flex: 1 1 calc(33.333% - 1rem);
+    }
+}
+
+/* Таблицы */
+.table-responsive {
+    border-radius: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    -webkit-overflow-scrolling: touch;
+}
+
+.table thead th {
+    background-color: #e9ecef;
+    border-bottom: 2px solid #ddd;
+    padding: 8px;
+    font-weight: 600;
+    color: #444;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 6px;
+    border-bottom: 1px solid #eee;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+/* Формы */
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: #444;
+    font-size: 0.8rem;
+}
+
+.form-select,
+.form-control {
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    padding: 7px;
+    font-size: 0.8em;
+    transition: border-color 0.3s ease;
+}
+
+.form-select:focus,
+.form-control:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0,123,255,0.2);
+}
+
+/* Пустое состояние */
+.empty-state {
+    text-align: center;
+    padding: 25px;
+    color: #6c757d;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #dee2e6;
+}
+
+.empty-state p {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* Админка */
+.admin-layout .main-content {
+    display: flex;
+    gap: 15px;
+}
+
+.admin-layout .left-panel {
+    width: 25%;
+    position: fixed;
+    top: 70px;
+    bottom: 0;
+    overflow-y: auto;
+    padding: 15px;
+    background: #fff;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.admin-layout .left-panel::-webkit-scrollbar {
+    display: none;
+}
+
+.admin-layout .right-panel {
+    width: 75%;
+    margin-left: 25%;
+    padding: 15px;
+    overflow-y: auto;
+    height: 100%;
+}
+
+/* Элементы админки */
+.form-container {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+}
+
+.group-box {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+
+.group-box h5 {
+    margin-bottom: 10px;
+    color: #007bff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Кнопки действий */
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 5px;
+    margin-bottom: 0.8rem;
+}
+
+.action-buttons .btn {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+    white-space: nowrap;
+    font-size: 0.75rem;
+}
+
+.action-buttons .btn:hover {
+    background: #0056b3;
+}
+
+/* Таблицы оценок */
+.grade-layout .table-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.number-cell,
+.lesson-cell,
+.grade-cell {
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.number-cell {
+    width: 60px;
+}
+
+.student-name {
+    min-width: 150px;
+    width: 300px;
+}
+
+.lesson-cell {
+    width: 40px;
+}
+
+.grade-cell {
+    width: 90px;
+}
+
+.grade-input {
+    width: 35px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 0 auto;
+    display: block;
+    font-size: 0.75rem;
+}
+
+/* Статусы */
+.table tr.failed,
+.table tr.low-grade {
+    background-color: rgba(220,53,69,0.05);
+}
+
+.table tr.absence {
+    background-color: rgba(255,193,7,0.1);
+}
+
+/* Статистика */
+.stats-card {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 0.8rem;
+}
+
+.stats-item {
+    padding: 10px;
+    border-right: 1px solid #eee;
+    text-align: center;
+}
+
+.stats-item:last-child {
+    border-right: none;
+}
+
+.stats-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.stats-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #222;
+}
+
+/* Для блоков информации (ФИО, группа, факультет и пр.) */
+.info-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 3px;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #212529;
+    margin: 0;
+}
+
+/* Подчёркивание для подсказки */
+.info-tooltip {
+    cursor: help;
+    border-bottom: 1px dashed #6c757d;
+}
+
+/* Скрытые алерты */
+.alert {
+    display: none; /* по умолчанию скрыты */
+    margin-top: 10px;
+}
+
+/* Чтобы алерты не занимали место при display:none */
+.alert.show {
+    display: block;
+}
+
+
+/* Адаптив */
+@media (max-width: 992px) {
+    .admin-layout .left-panel {
+        width: 30%;
+    }
+    .admin-layout .right-panel {
+        width: 70%;
+        margin-left: 30%;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-title {
+        font-size: 1.1rem;
+    }
+
+    .admin-layout .main-content {
+        flex-direction: column;
+    }
+
+    .admin-layout .left-panel {
+        width: 100%;
+        position: relative;
+        top: 0;
+        height: auto;
+        max-height: 300px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        border-radius: 10px;
+    }
+
+    .admin-layout .right-panel {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .action-buttons {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .stats-item {
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        padding: 10px;
+    }
+
+    .stats-item:last-child {
+        border-bottom: none;
+    }
+
+    .student-name {
+        min-width: 120px;
+        width: auto;
+    }
+
+    .grade-cell {
+        width: 70px;
+    }
+}

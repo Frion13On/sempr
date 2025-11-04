@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ввод экзаменационных оценок</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body class="grade-layout">
+    <div class="header-bar">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="header-logo">
+                    <h1 class="header-title">Ввод оценок за экзамен</h1>
+                </div>
+                <div>
+                    <button id="theme-toggle" class="btn btn-light" style="border:none; background:none;"></button>
+                    <a href="{{ url_for('teacher.teacher_dashboard') }}" class="btn btn-outline-light nav-btn me-2">
+                        <i class="bi bi-arrow-left"></i> Назад
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light nav-btn">
+                        <i class="bi bi-box-arrow-right"></i> Выход
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
+                            <label for="disciplineSelect" class="form-label">Дисциплина</label>
+                            <select class="form-select" id="disciplineSelect">
+                                <option value="">Выберите дисциплину</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="groupInput" class="form-label">Группа</label>
+                            <input type="text" class="form-control" id="groupInput" list="groupsList" placeholder="Введите группу">
+                            <datalist id="groupsList"></datalist>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" id="loadDataBtn">
+                                    <i class="bi bi-search"></i> Загрузить данные
+                                </button>
+                                <button class="btn btn-success" id="saveDataBtn">
+                                    <i class="bi bi-save"></i> Сохранить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="gradesTable">
+                                <thead>
+                                    <tr>
+                                        <th class="number-cell">№</th>
+                                        <th class="student-name">ФИО студента</th>
+                                        <th class="grade-cell">Оценка</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                            <div class="empty-state d-none" id="emptyState">
+                                <i class="bi bi-journal-x"></i>
+                                <p>Нет данных для отображения</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.userRole = "{{ current_user.role_id }}";
+        window.userId = "{{ current_user.student_id }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/exinpgrades.js') }}"></script>
+</body>
+</html> 

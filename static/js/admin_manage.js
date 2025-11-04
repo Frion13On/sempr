@@ -1,0 +1,1006 @@
+(() => {
+  const sel = id => document.getElementById(id);
+  const entitySelector = sel('entitySelector');
+  const searchInput = sel('searchInput');
+  const thead = sel('thead_row');
+  const tbody = sel('tbody_rows');
+
+  const forms = {
+    users_students: sel('form_users_students'),
+    users_teachers: sel('form_users_teachers'),
+    users_admins: sel('form_users_admins'),
+    disciplines: sel('form_disciplines'),
+    groups: sel('form_groups'),
+    specialties: sel('form_specialties'),
+    assign_teachers_disciplines: sel('form_assign_teachers_disciplines'),
+    assign_specialties_disciplines: sel('form_assign_specialties_disciplines'),
+    exams: sel('form_exams'),
+    departments: sel('form_departments'),
+    faculties: sel('form_faculties')
+  };
+
+  const headersByEntity = {
+    users_students: ['ID', 'ФИО', 'Логин', 'Пароль', 'Пол', 'Дата рождения', 'Телефон', 'Почта', 'Группа'],
+    users_teachers: ['ID', 'ФИО', 'Логин', 'Пароль', 'Пол', 'Дата рождения', 'Телефон', 'Почта', 'Должность', 'Кафедра'],
+    users_admins: ['ID', 'ФИО', 'Логин', 'Пароль'],
+    disciplines: ['ID', 'Название', 'Количество занятий'],
+    groups: ['Название группы', 'Специальность', 'Курс', 'Куратор'],
+    specialties: ['ID', 'Название специальности', 'Уровень образования', 'Кафедра'],
+    assign_teachers_disciplines: ['Преподаватель', 'Дисциплина'],
+    assign_specialties_disciplines: ['Специальность', 'Дисциплина'],
+    exams: ['ID', 'Дисциплина', 'Преподаватель', 'Группа', 'Дата экзамена'],
+    departments: ['Название кафедры', 'Факультет', 'Заведующий', 'Должность', 'Почта', 'Телефон'],
+    faculties: ['Название факультета', 'Декан', 'Должность', 'Почта', 'Телефон']
+  };
+
+  // Конфигурация API и генераторов по сущностям
+  const apiMap = {
+    disciplines: '/api/disciplines',
+    groups: '/api/groups',
+    specialties: '/api/specialties',
+    assign_teachers_disciplines: '/api/discipline-assignments',
+    assign_specialties_disciplines: '/api/specialty-assignments',
+    exams: '/api/exams',
+    departments: '/api/departments_list',
+    faculties: '/api/faculties'
+  };
+
+  const rowRenderers = {
+    users_students: (row) => `
+        <td>${row['id_студ'] || ''}</td>
+        <td>${row['фио_студ'] || ''}</td>
+        <td>${row['логин'] || ''}</td>
+        <td>${row['пароль'] || ''}</td>
+        <td>${row['пол'] || ''}</td>
+        <td>${formatDate(row['дата_рождения']) || ''}</td>
+        <td>${row['телефон'] || ''}</td>
+        <td>${row['почта'] || ''}</td>
+        <td>${row['название_группы'] || ''}</td>`,
+    users_teachers: (row) => `
+        <td>${row['id_преп'] || ''}</td>
+        <td>${row['фио_преп'] || ''}</td>
+        <td>${row['логин'] || ''}</td>
+        <td>${row['пароль'] || ''}</td>
+        <td>${row['пол'] || ''}</td>
+        <td>${formatDate(row['дата_рождения']) || ''}</td>
+        <td>${row['телефон'] || ''}</td>
+        <td>${row['почта'] || ''}</td>
+        <td>${row['должность'] || ''}</td>
+        <td>${row['кафедра'] || ''}</td>`,
+    users_admins: (row) => `
+        <td>${row['код_адм'] || ''}</td>
+        <td>${row['фио_адм'] || ''}</td>
+        <td>${row['логин'] || ''}</td>
+        <td>${row['пароль'] || ''}</td>`,
+    disciplines: (row) => `
+        <td>${row['id_дисц'] || ''}</td>
+        <td>${row['название'] || ''}</td>
+        <td>${row['количество_занятий'] || ''}</td>`,
+    groups: (row) => `
+        <td>${row['название_группы'] || ''}</td>
+        <td>${row['Специальность'] || ''}</td>
+        <td>${row['курс'] || ''}</td>
+        <td>${row['Куратор'] || ''}</td>`,
+    specialties: (row) => `
+        <td>${row['id_спец'] || ''}</td>
+        <td>${row['название_спец'] || ''}</td>
+        <td>${row['уровень_образования'] || ''}</td>
+        <td>${row['кафедра'] || ''}</td>`,
+    exams: (row) => `
+        <td>${row['id_экзамен'] || ''}</td>
+        <td>${row['Дисциплина'] || ''}</td>
+        <td>${row['Преподаватель'] || ''}</td>
+        <td>${row['название_группы'] || ''}</td>
+        <td>${formatDate(row['дата_экзамена']) || ''}</td>`,
+    departments: (row) => `
+        <td>${row['назв_каф'] || ''}</td>
+        <td>${row['факультет'] || ''}</td>
+        <td>${row['заведующий'] || ''}</td>
+        <td>${row['должность_каф'] || ''}</td>
+        <td>${row['почта_каф'] || ''}</td>
+        <td>${row['тел_каф'] || ''}</td>`,
+    faculties: (row) => `
+        <td>${row['назв_факультет'] || ''}</td>
+        <td>${row['декан'] || ''}</td>
+        <td>${row['должность_ф'] || ''}</td>
+        <td>${row['почта_ф'] || ''}</td>
+        <td>${row['тел_ф'] || ''}</td>`,
+    assign_teachers_disciplines: (row) => `
+        <td>${row['ФИО_преп'] || ''}</td>
+        <td>${row['Название'] || ''}</td>`,
+    assign_specialties_disciplines: (row) => `
+        <td>${row['Название_спец'] || ''}</td>
+        <td>${row['Название'] || ''}</td>`
+  };
+
+  const idGetters = {
+    users_students: (row) => row['id_студ'],
+    users_teachers: (row) => row['id_преп'],
+    users_admins: (row) => row['код_адм'],
+    disciplines: (row) => row['id_дисц'],
+    groups: (row) => row['название_группы'],
+    specialties: (row) => row['id_спец'],
+    exams: (row) => row['id_экзамен'],
+    departments: (row) => row['назв_каф'],
+    faculties: (row) => row['назв_факультет'],
+    assign_teachers_disciplines: (row) => `${row['ФИО_преп']}|${row['Название']}`,
+    assign_specialties_disciplines: (row) => `${row['Название_спец']}|${row['Название']}`
+  };
+
+  const payloadBuilders = {
+    disciplines: () => ({
+      Название: sel('d_name').value,
+      Количество_занятий: parseInt(sel('d_lessons').value)
+    }),
+    groups: () => ({
+      Название_группы: sel('g_name').value,
+      Специальность: sel('g_specialty').value,
+      Курс: parseInt(sel('g_course').value),
+      Куратор: sel('g_curator').value
+    }),
+    specialties: () => ({
+      ID_спец: sel('s_id').value,
+      Название_спец: sel('s_name').value,
+      Уровень_образования: sel('s_level').value,
+      Кафедра: sel('s_department').value
+    }),
+    exams: () => ({
+      Дисциплина: sel('e_discipline').value,
+      Преподаватель: sel('e_teacher').value,
+      Название_группы: sel('e_group').value,
+      Дата_экзамена: sel('e_date').value
+    }),
+    departments: () => ({
+      Назв_каф: sel('df_dep_name').value,
+      Факультет: sel('df_dep_faculty').value,
+      Заведующий: sel('df_dep_head').value,
+      Должность_каф: sel('df_dep_position').value,
+      Почта_каф: sel('df_dep_email').value,
+      Тел_каф: sel('df_dep_phone').value
+    }),
+    faculties: () => ({
+      Назв_факультет: sel('df_fac_name').value,
+      Декан: sel('df_fac_dean').value,
+      Должность_ф: sel('df_fac_position').value,
+      Почта_ф: sel('df_fac_email').value,
+      Тел_ф: sel('df_fac_phone').value
+    }),
+    assign_teachers_disciplines: () => ({
+      ФИО_преп: sel('atd_teacher').value,
+      Название: sel('atd_discipline').value
+    }),
+    assign_specialties_disciplines: () => ({
+      Название_спец: sel('asd_specialty').value,
+      Название: sel('asd_discipline').value
+    })
+  };
+
+  // Состояние
+  let currentEntity = 'users_admins';
+  let selectedId = null;
+  let currentDataAbortController = null;
+  let searchDebounceTimer = null;
+  let requestInFlight = false;
+  let lastDataRequestId = 0;
+  const sortStateByEntity = {};
+
+  // Инициализация
+  function init() {
+    entitySelector.addEventListener('change', onEntityChange);
+    searchInput.addEventListener('input', onSearchChange);
+    sel('btn_save').addEventListener('click', onSave);
+    sel('btn_edit').addEventListener('click', onEdit);
+    sel('btn_delete').addEventListener('click', onDelete);
+    sel('btn_reload').addEventListener('click', onReload);
+    tbody.addEventListener('click', onRowClick);
+    tbody.addEventListener('dblclick', onRowDoubleClick);
+    const phoneInputs = document.querySelectorAll('input[type="tel"]');
+    phoneInputs.forEach(input => {
+      input.addEventListener('input', formatPhoneInput);
+      input.addEventListener('keypress', validatePhoneInput);
+    });
+    setTimeout(() => {
+      entitySelector.value = 'users_admins';
+      currentEntity = entitySelector.value;
+      entitySelector.selectedIndex = 2;
+      onEntityChange();
+    }, 100);
+  }
+
+  function onEntityChange() {
+    if (requestInFlight) return;
+    currentEntity = entitySelector.value;
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = null;
+    }
+    if (currentDataAbortController) {
+      currentDataAbortController.abort();
+      currentDataAbortController = null;
+    }
+    
+    setVisibleForm(currentEntity);
+    renderHeaders(currentEntity);
+    loadData(currentEntity);
+    clearForm();
+    loadAutoCompleteData(currentEntity);
+  }
+
+  function setVisibleForm(entity) {
+    Object.entries(forms).forEach(([key, el]) => {
+      if (!el) return;
+      el.classList.toggle('d-none', key !== entity);
+    });
+  }
+
+
+  // Таблица и сортировка
+  function renderHeaders(entity) {
+    thead.innerHTML = '';
+    const headers = headersByEntity[entity] || [];
+    headers.forEach((h, idx) => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      th.style.cursor = 'pointer';
+      th.dataset.index = String(idx);
+      th.addEventListener('click', onHeaderClick);
+      const indicator = document.createElement('span');
+      indicator.className = 'ms-1 sort-ind';
+      indicator.style.fontSize = '0.8em';
+      th.appendChild(indicator);
+      thead.appendChild(th);
+    });
+    updateHeaderIndicators();
+  }
+
+  async function loadData(entity, search = '') {
+    tbody.innerHTML = '';
+    const requestId = ++lastDataRequestId;
+    try {
+      if (currentDataAbortController) {
+        currentDataAbortController.abort();
+      }
+      currentDataAbortController = new AbortController();
+      const { signal } = currentDataAbortController;
+      let url, data;
+      
+      if (entity.startsWith('users_')) {
+        const tableMap = {
+          'users_students': { table: 'студенты', fioField: 'фио_студ' },
+          'users_teachers': { table: 'преподаватели', fioField: 'фио_преп' },
+          'users_admins': { table: 'администраторы', fioField: 'фио_адм' }
+        };
+        const config = tableMap[entity];
+        url = `/api/get_users?table=${config.table}&fioField=${config.fioField}&search=${encodeURIComponent(search)}`;
+      } else {
+        url = apiMap[entity];
+        if (search) url += `?search=${encodeURIComponent(search)}`;
+      }
+
+      const response = await fetch(url, { signal });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      data = await response.json();
+
+      if (requestId !== lastDataRequestId) {
+        return;
+      }
+      const fragment = document.createDocumentFragment();
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = createTableRow(row, entity);
+        tr.dataset.id = getRowId(row, entity);
+        fragment.appendChild(tr);
+      });
+      tbody.appendChild(fragment);
+      applyCurrentSort();
+
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return;
+      }
+      console.error('Error loading data:', error);
+      showError('Ошибка загрузки данных: ' + error.message);
+    } finally {
+      currentDataAbortController = null;
+    }
+  }
+
+  function onHeaderClick(e) {
+    const th = e.currentTarget;
+    const index = parseInt(th.dataset.index, 10);
+    const current = sortStateByEntity[currentEntity];
+    if (!current || current.index !== index) {
+      sortStateByEntity[currentEntity] = { index, dir: 'asc' };
+    } else {
+      sortStateByEntity[currentEntity].dir = current.dir === 'asc' ? 'desc' : 'asc';
+    }
+    applyCurrentSort();
+    updateHeaderIndicators();
+  }
+
+  function updateHeaderIndicators() {
+    const state = sortStateByEntity[currentEntity];
+    Array.from(thead.children).forEach(th => {
+      const ind = th.querySelector('.sort-ind');
+      if (!ind) return;
+      ind.textContent = '';
+    });
+    if (state) {
+      const th = thead.querySelector(`th[data-index="${state.index}"]`);
+      if (th) {
+        const ind = th.querySelector('.sort-ind');
+        if (ind) ind.textContent = state.dir === 'asc' ? '▲' : '▼';
+      }
+    }
+  }
+
+  function applyCurrentSort() {
+    const state = sortStateByEntity[currentEntity];
+    if (!state) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const idx = state.index;
+    const dirMul = state.dir === 'asc' ? 1 : -1;
+    const collator = new Intl.Collator('ru', { numeric: true, sensitivity: 'base' });
+    rows.sort((a, b) => {
+      const va = (a.cells[idx] ? a.cells[idx].textContent.trim() : '') || '';
+      const vb = (b.cells[idx] ? b.cells[idx].textContent.trim() : '') || '';
+      const na = parseFloat(va.replace(',', '.'));
+      const nb = parseFloat(vb.replace(',', '.'));
+      const isNum = !isNaN(na) && !isNaN(nb) && va !== '' && vb !== '';
+      const da = Date.parse(va);
+      const db = Date.parse(vb);
+      const isDate = !isNaN(da) && !isNaN(db);
+      let cmp = 0;
+      if (isNum) cmp = na === nb ? 0 : (na < nb ? -1 : 1);
+      else if (isDate) cmp = da === db ? 0 : (da < db ? -1 : 1);
+      else cmp = collator.compare(va, vb);
+      return cmp * dirMul;
+    });
+    const frag = document.createDocumentFragment();
+    rows.forEach(r => frag.appendChild(r));
+    tbody.appendChild(frag);
+  }
+
+  // Рендер строк
+  function createTableRow(row, entity) {
+    const renderer = rowRenderers[entity];
+    return renderer ? renderer(row) : '';
+  }
+
+  function getRowId(row, entity) {
+    const getter = idGetters[entity];
+    return getter ? getter(row) : null;
+  }
+
+  function onRowClick(e) {
+    const row = e.target.closest('tr');
+    if (!row) return;
+    tbody.querySelectorAll('tr').forEach(r => r.classList.remove('table-active'));
+    row.classList.add('table-active');
+    selectedId = row.dataset.id;
+  }
+
+  function onRowDoubleClick(e) {
+    const row = e.target.closest('tr');
+    if (!row) return;
+    
+    selectedId = row.dataset.id;
+    fillFormFromRow(row);
+  }
+
+  function fillFormFromRow(row) {
+    const cells = row.cells;
+    
+    if (currentEntity.startsWith('users_')) {
+      fillUserForm(cells);
+    } else if (currentEntity === 'disciplines') {
+      sel('d_name').value = cells[1].textContent;
+      sel('d_lessons').value = cells[2].textContent;
+    } else if (currentEntity === 'groups') {
+      sel('g_name').value = cells[0].textContent;
+      sel('g_specialty').value = cells[1].textContent;
+      sel('g_course').value = cells[2].textContent;
+      sel('g_curator').value = cells[3].textContent;
+    } else if (currentEntity === 'specialties') {
+      sel('s_id').value = cells[0].textContent;
+      sel('s_name').value = cells[1].textContent;
+      sel('s_level').value = cells[2].textContent;
+      sel('s_department').value = cells[3].textContent;
+    } else if (currentEntity === 'exams') {
+      sel('e_discipline').value = cells[1].textContent;
+      sel('e_teacher').value = cells[2].textContent;
+      sel('e_group').value = cells[3].textContent;
+      sel('e_date').value = cells[4].textContent;
+    } else if (currentEntity === 'departments') {
+      sel('df_dep_name').value = cells[0].textContent;
+      sel('df_dep_faculty').value = cells[1].textContent;
+      sel('df_dep_head').value = cells[2].textContent;
+      sel('df_dep_position').value = cells[3].textContent;
+      sel('df_dep_email').value = cells[4].textContent;
+      sel('df_dep_phone').value = cells[5].textContent;
+    } else if (currentEntity === 'faculties') {
+      sel('df_fac_name').value = cells[0].textContent;
+      sel('df_fac_dean').value = cells[1].textContent;
+      sel('df_fac_position').value = cells[2].textContent;
+      sel('df_fac_email').value = cells[3].textContent;
+      sel('df_fac_phone').value = cells[4].textContent;
+    } else if (currentEntity === 'assign_teachers_disciplines') {
+      sel('atd_teacher').value = cells[0].textContent;
+      sel('atd_discipline').value = cells[1].textContent;
+    } else if (currentEntity === 'assign_specialties_disciplines') {
+      sel('asd_specialty').value = cells[0].textContent;
+      sel('asd_discipline').value = cells[1].textContent;
+    }
+  }
+
+  function fillUserForm(cells) {
+    if (currentEntity === 'users_students') {
+      sel('s_fio').value = cells[1].textContent;
+      sel('s_login').value = cells[2].textContent;
+      sel('s_password').value = cells[3].textContent;
+      const genderValue = cells[4].textContent;
+      if (genderValue) {
+        document.querySelector(`input[name="s_gender"][value="${genderValue}"]`).checked = true;
+      }
+      sel('s_birth').value = cells[5].textContent;
+      sel('s_phone').value = cells[6].textContent;
+      sel('s_email').value = cells[7].textContent;
+      sel('s_group').value = cells[8].textContent;
+    } else if (currentEntity === 'users_teachers') {
+      sel('t_fio').value = cells[1].textContent;
+      sel('t_login').value = cells[2].textContent;
+      sel('t_password').value = cells[3].textContent;
+      const genderValue = cells[4].textContent;
+      if (genderValue) {
+        document.querySelector(`input[name="t_gender"][value="${genderValue}"]`).checked = true;
+      }
+      sel('t_birth').value = cells[5].textContent;
+      sel('t_phone').value = cells[6].textContent;
+      sel('t_email').value = cells[7].textContent;
+      sel('t_position').value = cells[8].textContent;
+      sel('t_department').value = cells[9].textContent;
+    } else if (currentEntity === 'users_admins') {
+      sel('a_fio').value = cells[1].textContent;
+      sel('a_login').value = cells[2].textContent;
+      sel('a_password').value = cells[3].textContent;
+    }
+  }
+
+  // Автокомплит
+  async function loadAutoCompleteData(entity) {
+    try {
+      if (entity === 'users_teachers') {
+        await loadDepartmentsInto('departments_teachers');
+      } else if (entity === 'specialties') {
+        await loadDepartmentsInto('departments_specialty');
+      } else if (entity === 'departments') {
+      }
+      
+      if (entity === 'users_students') {
+        await loadGroupsInto('groups_students');
+      } else if (entity === 'exams') {
+        await loadGroupsInto('groups_exam');
+      } else if (entity === 'groups') {
+      }
+      
+      if (entity === 'groups') {
+        await loadSpecialtiesInto('specialties', true);
+      }
+      
+      if (entity === 'exams') {
+        await loadDisciplinesInto('disciplines');
+        await loadTeachersInto('teachers_exam');
+      }
+      
+      if (entity === 'departments') {
+        const response = await fetch('/api/faculties');
+        if (response.ok) {
+          const faculties = await response.json();
+          const datalist = sel('faculties');
+          if (datalist) {
+            datalist.innerHTML = '';
+            faculties.forEach(faculty => {
+              const option = document.createElement('option');
+              option.value = faculty['назв_факультет'];
+              datalist.appendChild(option);
+            });
+          }
+        }
+      }
+      
+    if (entity === 'assign_teachers_disciplines') {
+      await loadTeachersInto('teachers_assign');
+    }
+
+    if (entity === 'assign_teachers_disciplines') {
+      await loadDisciplinesInto('disciplines_assign');
+    } else if (entity === 'assign_specialties_disciplines') {
+      await loadDisciplinesInto('disciplines_assign2');
+    }
+
+    if (entity === 'assign_specialties_disciplines') {
+      await loadSpecialtiesInto('specialties_assign', false);
+    }
+
+    } catch (error) {
+      console.error('Error loading autocomplete data:', error);
+    }
+  }
+
+  // Хелперы автокомплита
+  async function loadDepartmentsInto(datalistId) {
+    const response = await fetch('/api/departments_list');
+    if (!response.ok) return;
+    const departments = await response.json();
+    const datalist = sel(datalistId);
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    departments.forEach(dept => {
+      const option = document.createElement('option');
+      option.value = dept['назв_каф'];
+      datalist.appendChild(option);
+    });
+  }
+
+  async function loadGroupsInto(datalistId) {
+    const response = await fetch('/api/groups');
+    if (!response.ok) return;
+    const groups = await response.json();
+    const datalist = sel(datalistId);
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    groups.forEach(group => {
+      const option = document.createElement('option');
+      option.value = group['название_группы'];
+      datalist.appendChild(option);
+    });
+  }
+
+  async function loadDisciplinesInto(datalistId) {
+    const response = await fetch('/api/disciplines');
+    if (!response.ok) return;
+    const disciplines = await response.json();
+    const datalist = sel(datalistId);
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    disciplines.forEach(disc => {
+      const option = document.createElement('option');
+      option.value = disc['название'];
+      datalist.appendChild(option);
+    });
+  }
+
+  async function loadTeachersInto(datalistId) {
+    const teachersResponse = await fetch('/api/get_users?table=преподаватели&fioField=фио_преп');
+    if (!teachersResponse.ok) return;
+    const teachers = await teachersResponse.json();
+    const datalist = sel(datalistId);
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    teachers.forEach(teacher => {
+      const option = document.createElement('option');
+      option.value = teacher['фио_преп'];
+      datalist.appendChild(option);
+    });
+  }
+
+  // Поиск
+  function onSearchChange() {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      loadData(currentEntity, searchInput.value);
+    }, 300);
+  }
+
+  // CRUD
+  function onSave() {
+    if (requestInFlight) return;
+    if (!validateForm()) return;
+    submitEntity('POST')
+      .then(() => { loadData(currentEntity); clearForm(); })
+      .catch(err => showError('Ошибка сохранения: ' + err.message));
+  }
+
+  function onEdit() {
+    if (requestInFlight) return;
+    if (!selectedId) {
+      showError('Выберите запись для редактирования');
+      return;
+    }
+    
+    if (!validateForm()) return;
+
+    submitEntity('PUT')
+      .then(() => { loadData(currentEntity); clearForm(); })
+      .catch(err => showError('Ошибка обновления: ' + err.message));
+  }
+
+  function onDelete() {
+    if (requestInFlight) return;
+    if (!selectedId) {
+      showError('Выберите запись для удаления');
+      return;
+    }
+    
+    showConfirm('Удалить запись?', () => {
+      submitEntity('DELETE')
+        .then(() => { showMessage('Запись удалена!'); loadData(currentEntity); clearForm(); })
+        .catch(err => showError('Ошибка удаления: ' + err.message));
+    });
+  }
+
+  // Вспомогательные
+  function onReload() {
+    if (requestInFlight) return;
+    loadData(currentEntity);
+    loadAutoCompleteData(currentEntity);
+    clearForm();
+  }
+
+  function setBusy(isBusy) {
+    requestInFlight = isBusy;
+    const ids = ['btn_save', 'btn_edit', 'btn_delete', 'btn_reload', 'entitySelector', 'searchInput'];
+    ids.forEach(id => {
+      const el = sel(id);
+      if (el) el.disabled = isBusy;
+    });
+  }
+
+  async function apiFetch(url, method, payload, timeoutMs = 15000) {
+    setBusy(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const resp = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: payload ? JSON.stringify(payload) : undefined,
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+      let data = {};
+      try { data = await resp.json(); } catch (_) { /* ignore */ }
+      if (!resp.ok) {
+        const msg = data && data.error ? data.error : `HTTP ${resp.status}`;
+        throw new Error(msg);
+      }
+      return data;
+    } catch (e) {
+      if (e.name === 'AbortError') throw new Error('Таймаут запроса. Попробуйте ещё раз.');
+      throw e;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function submitEntity(verb) {
+    const { url, payload } = buildRequest(verb);
+    return apiFetch(url, verb, payload);
+  }
+
+  function buildRequest(method) {
+    if (currentEntity.startsWith('users_')) {
+      const tableMap = {
+        'users_students': { table: 'студенты', idField: 'id_студ' },
+        'users_teachers': { table: 'преподаватели', idField: 'id_преп' },
+        'users_admins': { table: 'администраторы', idField: 'код_адм' }
+      };
+      const { table, idField } = tableMap[currentEntity];
+      const data = getUserFormData();
+
+      if (method === 'POST') {
+        return {
+          url: '/api/add_user',
+          payload: { table, data }
+        };
+      }
+      if (method === 'PUT') {
+        return {
+          url: '/api/update_user',
+          payload: { table, idField, id: selectedId, data }
+        };
+      }
+      if (method === 'DELETE') {
+        return {
+          url: '/api/delete_user',
+          payload: { table, idField, id: selectedId }
+        };
+      }
+    }
+
+    const baseMap = {
+      disciplines: '/api/disciplines',
+      groups: '/api/groups',
+      specialties: '/api/specialties',
+    assign_teachers_disciplines: '/api/discipline-assignments',
+    assign_specialties_disciplines: '/api/specialty-assignments',
+      exams: '/api/exams',
+      departments: '/api/departments',
+      faculties: '/api/faculties'
+    };
+    const idPath = buildRestIdPath();
+  let url;
+  if (method === 'POST') {
+    url = baseMap[currentEntity];
+  } else {
+    if ((currentEntity === 'assign_teachers_disciplines' || currentEntity === 'assign_specialties_disciplines')) {
+      url = baseMap[currentEntity];
+    } else {
+      url = `${baseMap[currentEntity]}/${idPath}`;
+    }
+  }
+    const payload = buildEntityPayload(method);
+    return { url, payload };
+  }
+
+  function buildRestIdPath() {
+  if (currentEntity === 'assign_teachers_disciplines' || currentEntity === 'assign_specialties_disciplines') {
+    return '';
+  }
+  return encodeURIComponent(selectedId);
+  }
+
+  function buildEntityPayload(method) {
+    const builder = payloadBuilders[currentEntity];
+    return builder ? builder() : {};
+  }
+
+  // Валидация и данные форм
+  function getUserFormData() {
+    if (currentEntity === 'users_students') {
+      return {
+        фио_студ: sel('s_fio').value,
+        логин: sel('s_login').value,
+        пароль: sel('s_password').value,
+        пол: document.querySelector('input[name="s_gender"]:checked').value,
+        дата_рождения: sel('s_birth').value,
+        телефон: sel('s_phone').value,
+        почта: sel('s_email').value,
+        название_группы: sel('s_group').value
+      };
+    } else if (currentEntity === 'users_teachers') {
+      return {
+        фио_преп: sel('t_fio').value,
+        логин: sel('t_login').value,
+        пароль: sel('t_password').value,
+        пол: document.querySelector('input[name="t_gender"]:checked').value,
+        дата_рождения: sel('t_birth').value,
+        телефон: sel('t_phone').value,
+        почта: sel('t_email').value,
+        должность: sel('t_position').value,
+        кафедра: sel('t_department').value
+      };
+    } else if (currentEntity === 'users_admins') {
+      return {
+        фио_адм: sel('a_fio').value,
+        логин: sel('a_login').value,
+        пароль: sel('a_password').value
+      };
+    }
+    return {};
+  }
+
+  function validateForm() {
+    const formRoot = forms[currentEntity];
+    if (!formRoot) return true;
+    const requiredFields = formRoot.querySelectorAll('input[required], select[required]');
+    let isValid = true;
+
+    requiredFields.forEach(field => {
+      const isHidden = field.offsetParent === null;
+      if (isHidden) return;
+      if (!String(field.value || '').trim()) {
+        field.classList.add('is-invalid');
+        isValid = false;
+      } else {
+        field.classList.remove('is-invalid');
+      }
+    });
+
+    if (isValid) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isValidPhone = (v) => v === '' || /^\d{1,11}$/.test(v);
+
+      if (currentEntity === 'users_students') {
+        const phone = sel('s_phone');
+        const email = sel('s_email');
+        const login = sel('s_login');
+        const password = sel('s_password');
+        if (phone && !isValidPhone(phone.value.trim())) { phone.classList.add('is-invalid'); isValid = false; }
+        if (email && email.value.trim() && !emailRegex.test(email.value.trim())) { email.classList.add('is-invalid'); isValid = false; }
+        if (login && password && login.value && password.value && login.value === password.value) {
+          login.classList.add('is-invalid');
+          password.classList.add('is-invalid');
+          isValid = false;
+        }
+      } else if (currentEntity === 'users_teachers') {
+        const phone = sel('t_phone');
+        const email = sel('t_email');
+        const login = sel('t_login');
+        const password = sel('t_password');
+        if (phone && !isValidPhone(phone.value.trim())) { phone.classList.add('is-invalid'); isValid = false; }
+        if (email && email.value.trim() && !emailRegex.test(email.value.trim())) { email.classList.add('is-invalid'); isValid = false; }
+        if (login && password && login.value && password.value && login.value === password.value) {
+          login.classList.add('is-invalid');
+          password.classList.add('is-invalid');
+          isValid = false;
+        }
+      } else if (currentEntity === 'users_admins') {
+        const login = sel('a_login');
+        const password = sel('a_password');
+        if (login && password && login.value && password.value && login.value === password.value) {
+          login.classList.add('is-invalid');
+          password.classList.add('is-invalid');
+          isValid = false;
+        }
+      } else if (currentEntity === 'departments') {
+        const phone = sel('df_dep_phone');
+        const email = sel('df_dep_email');
+        if (phone && phone.value.trim() && !isValidPhone(phone.value.trim())) { phone.classList.add('is-invalid'); isValid = false; }
+        if (email && email.value.trim() && !emailRegex.test(email.value.trim())) { email.classList.add('is-invalid'); isValid = false; }
+      } else if (currentEntity === 'faculties') {
+        const phone = sel('df_fac_phone');
+        const email = sel('df_fac_email');
+        if (phone && phone.value.trim() && !isValidPhone(phone.value.trim())) { phone.classList.add('is-invalid'); isValid = false; }
+        if (email && email.value.trim() && !emailRegex.test(email.value.trim())) { email.classList.add('is-invalid'); isValid = false; }
+      }
+    }
+
+    if (!isValid) showError('Проверьте корректность заполнения полей');
+    return isValid;
+  }
+
+  function clearForm() {
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+      if (input.id === 'entitySelector') return;
+      
+      if (input.type === 'radio') {
+        input.checked = false;
+      } else {
+        input.value = '';
+      }
+      input.classList.remove('is-invalid', 'is-valid');
+    });
+    
+    const maleRadios = [sel('s_male'), sel('t_male')];
+    maleRadios.forEach(radio => {
+      if (radio) radio.checked = true;
+    });
+    selectedId = null;
+    tbody.querySelectorAll('tr').forEach(r => r.classList.remove('table-active'));
+  }
+
+  function formatPhoneInput(e) {
+    let value = e.target.value;
+    value = value.replace(/\D/g, '');
+    if (value.length > 11) {
+      value = value.slice(0, 11);
+    }
+    e.target.value = value;
+  }
+
+  function validatePhoneInput(e) {
+    if (e.key === 'Backspace' || e.key === 'Delete') return true;
+    if (e.target.value.length >= 11) {
+      e.preventDefault();
+      return false;
+    }
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+      return false;
+    }
+  }
+
+  function formatDate(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toISOString().split('T')[0];
+  }
+
+  // Уведомления
+  function showMessage(message) {
+    renderAlert('success', message);
+  }
+
+  function showError(message) {
+    renderAlert('danger', message);
+  }
+
+  function renderAlert(kind, message) {
+    const { content, show, hide } = ensureOverlay();
+    content.innerHTML = '';
+    const box = document.createElement('div');
+    box.style.background = 'var(--color-card-bg)';
+    box.style.color = 'var(--color-text)';
+    box.style.minWidth = '320px';
+    box.style.maxWidth = '560px';
+    box.style.border = `1px solid var(--color-border)`;
+    box.style.borderRadius = '8px';
+    box.style.boxShadow = 'var(--elevation-2)';
+    box.style.padding = '16px';
+    const msg = document.createElement('div');
+    msg.className = `alert alert-${kind} show`;
+    msg.textContent = message;
+    msg.style.margin = '0';
+    content.appendChild(box);
+    box.appendChild(msg);
+    show();
+    setTimeout(() => hide(), 2000);
+  }
+
+  function showConfirm(message, onConfirm) {
+    const { content, show, hide } = ensureOverlay(true);
+    content.innerHTML = '';
+    const box = document.createElement('div');
+    box.style.background = 'var(--color-card-bg)';
+    box.style.color = 'var(--color-text)';
+    box.style.minWidth = '320px';
+    box.style.maxWidth = '560px';
+    box.style.border = `1px solid var(--color-border)`;
+    box.style.borderRadius = '8px';
+    box.style.boxShadow = 'var(--elevation-2)';
+    box.style.padding = '16px';
+    const title = document.createElement('div');
+    title.textContent = message;
+    title.style.fontWeight = '600';
+    title.style.marginBottom = '12px';
+    const buttons = document.createElement('div');
+    buttons.style.display = 'flex';
+    buttons.style.gap = '8px';
+    buttons.style.justifyContent = 'flex-end';
+    const btnYes = document.createElement('button');
+    btnYes.className = 'btn btn-danger btn-sm';
+    btnYes.textContent = 'Удалить';
+    const btnNo = document.createElement('button');
+    btnNo.className = 'btn btn-secondary btn-sm';
+    btnNo.textContent = 'Отмена';
+    buttons.appendChild(btnNo);
+    buttons.appendChild(btnYes);
+    content.appendChild(box);
+    box.appendChild(title);
+    box.appendChild(buttons);
+    show();
+    const close = () => hide();
+    btnNo.addEventListener('click', close);
+    btnYes.addEventListener('click', () => { close(); onConfirm && onConfirm(); });
+  }
+
+  function ensureOverlay(withBackdrop = false) {
+    let overlay = document.getElementById('ui-overlay');
+    let content;
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ui-overlay';
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.zIndex = '3000';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.pointerEvents = 'none';
+      const inner = document.createElement('div');
+      inner.id = 'ui-overlay-inner';
+      inner.style.pointerEvents = 'auto';
+      overlay.appendChild(inner);
+      document.body.appendChild(overlay);
+    }
+    content = document.getElementById('ui-overlay-inner');
+    const show = () => {
+      overlay.style.display = 'flex';
+      overlay.style.background = withBackdrop ? 'rgba(0,0,0,0.35)' : 'transparent';
+    };
+    const hide = () => {
+      overlay.style.display = 'none';
+      overlay.style.background = 'transparent';
+      content.innerHTML = '';
+    };
+    return { container: overlay, content, show, hide };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
