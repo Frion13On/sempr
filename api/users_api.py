@@ -9,11 +9,21 @@ users_api = Blueprint('users_api', __name__)
 
 # Simple validators
 _EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+_MALICIOUS_PATTERN_RE = re.compile(
+    r"(<\s*script|</\s*script|--|;|/\*|\*/|\bOR\b\s+['\"]?1['\"]?\s*=\s*['\"]?1['\"]?)",
+    re.IGNORECASE,
+)
 def _is_valid_email(v: str) -> bool:
     return bool(_EMAIL_RE.match(v))
 
 def _is_valid_phone(v: str) -> bool:
     return v.isdigit() and len(v) <= 11
+
+
+def _is_safe_string(value: str) -> bool:
+    if value is None:
+        return True
+    return not bool(_MALICIOUS_PATTERN_RE.search(value))
 
 _ALLOWED_FIELDS = {
     'администраторы': {'фио_адм', 'логин', 'пароль'},
@@ -49,6 +59,11 @@ def _validate_and_filter_user_payload(table: str, payload: dict):
     if email_key and data.get(email_key):
         if not _is_valid_email(str(data[email_key]).strip()):
             return False, 'Неверный формат email', None
+
+    for field, value in data.items():
+        text_value = str(value)
+        if not _is_safe_string(text_value):
+            return False, f'Поле {field} содержит потенциально опасный ввод', None
 
     return True, None, data
 
