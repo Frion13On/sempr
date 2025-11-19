@@ -10,14 +10,14 @@ def test_get_student_account_success(client, mock_db):
         [
             QueryStep(
                 fetchone=(
-                    "Студент Иванов",
-                    "ИБ-01",
+                    "Иванов Иван Иваныч",
+                    "22-СПО-ОИБАС-01",
                     "Информатика",
                     "Кафедра ИБ",
                     "Факультет ИТ",
                     "Зав. кафедры",
                     "89001234567",
-                    "dept@example.com",
+                    "kaf@example.com",
                     "Декан",
                     "89007654321",
                     "faculty@example.com",
@@ -30,8 +30,8 @@ def test_get_student_account_success(client, mock_db):
 
     assert response.status_code == HTTPStatus.OK
     body = response.get_json()
-    assert body["name"] == "Студент Иванов"
-    assert body["department_info"]["email"] == "dept@example.com"
+    assert body["name"] == "Иванов Иван Иваныч"
+    assert body["department_info"]["email"] == "kaf@example.com"
 
 
 def test_get_student_account_missing_id(client):
@@ -57,16 +57,16 @@ def test_get_teacher_account_success(client, mock_db):
         [
             QueryStep(
                 fetchone=(
-                    "Преподаватель Петров",
+                    "Петров Петр Петрович",
                     "Кафедра ИБ",
                     "Факультет ИТ",
                     "Зав. кафедры",
                     "89001234567",
-                    "dept@example.com",
+                    "kaf@example.com",
                     "Декан",
                     "89007654321",
                     "faculty@example.com",
-                    "ИБ-01, ИБ-02",
+                    "22-СПО-ОИБАС-01, 22-СПО-ОИБАС-02",
                 )
             ),
         ],
@@ -76,7 +76,7 @@ def test_get_teacher_account_success(client, mock_db):
 
     assert response.status_code == HTTPStatus.OK
     body = response.get_json()
-    assert body["groups"] == "ИБ-01, ИБ-02"
+    assert body["groups"] == "22-СПО-ОИБАС-01, 22-СПО-ОИБАС-02"
     assert body["faculty_info"]["dean"] == "Декан"
 
 

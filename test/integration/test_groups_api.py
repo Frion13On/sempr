@@ -15,14 +15,14 @@ def test_get_groups(client, mock_db):
                     "курс",
                     "Куратор",
                 ],
-                fetchall=[("ИБ-01", "Информатика", 1, "Иванов И.И.")],
+                fetchall=[("ИБ-01", "Информатика", 1, "Иванов Иван Иваныч")],
             )
         ],
     )
 
     response = client.get("/api/groups", query_string={"search": "ИБ"})
     assert response.status_code == HTTPStatus.OK
-    assert response.get_json()[0]["Куратор"] == "Иванов И.И."
+    assert response.get_json()[0]["Куратор"] == "Иванов Иван Иваныч"
 
 
 def test_add_group_missing_field(client):
@@ -51,7 +51,7 @@ def test_add_group_duplicate(client, mock_db):
             "Название_группы": "ИБ-01",
             "Специальность": "Информатика",
             "Курс": 1,
-            "Куратор": "Иванов И.И.",
+            "Куратор": "Иванов Иван Иваныч",
         },
     )
 
@@ -74,7 +74,7 @@ def test_add_group_specialty_not_found(client, mock_db):
             "Название_группы": "ИБ-02",
             "Специальность": "Неизвестная",
             "Курс": 1,
-            "Куратор": "Иванов И.И.",
+            "Куратор": "Иванов Иван Иваныч",
         },
     )
 
@@ -98,7 +98,7 @@ def test_add_group_success(client, mock_db):
             "Название_группы": "ИБ-03",
             "Специальность": "Информатика",
             "Курс": 2,
-            "Куратор": "Иванов И.И.",
+            "Куратор": "Иванов Иван Иваныч",
         },
     )
 
@@ -121,7 +121,7 @@ def test_update_group_success(client, mock_db):
         json={
             "Специальность": "Информатика",
             "Курс": 3,
-            "Куратор": "Иванов И.И.",
+            "Куратор": "Иванов Иван Иваныч",
         },
     )
 

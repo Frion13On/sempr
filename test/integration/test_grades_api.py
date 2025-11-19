@@ -149,8 +149,8 @@ def test_get_final_grades(client, mock_db):
         [
             QueryStep(
                 fetchall=[
-                    ("Иванов И.И.", 0, 10, 4.8),
-                    ("Петров П.П.", 6, 10, 3.2),
+                    ("Иванов Иван Иваныч", 0, 10, 4.8),
+                    ("Петров Петр Петрович", 6, 10, 3.2),
                 ]
             )
         ],
@@ -175,8 +175,8 @@ def test_get_grades_table(client, mock_db):
             QueryStep(fetchone=(101,)),  # id дисциплины
             QueryStep(
                 fetchall=[
-                    ("Иванов И.И.", " 1 ", "5", "Петров П.П."),
-                    ("Иванов И.И.", "2", "Н", "Петров П.П."),
+                    ("Иванов Иван Иваныч", " 1 ", "5", "Петров Петр Петрович"),
+                    ("Иванов Иван Иваныч", "2", "Н", "Петров Петр Петрович"),
                     ("Петров С.С.", None, None, None),
                 ]
             ),
@@ -192,8 +192,8 @@ def test_get_grades_table(client, mock_db):
     body = response.get_json()
     assert body["numberOfLessons"] == 3
     students = {student["name"]: student for student in body["students"]}
-    assert students["Иванов И.И."]["grades"]["1"] == "5"
-    assert students["Иванов И.И."]["absences"] == 1
+    assert students["Иванов Иван Иваныч"]["grades"]["1"] == "5"
+    assert students["Иванов Иван Иваныч"]["absences"] == 1
 
 
 def test_save_grades_success(client, mock_db):
@@ -215,7 +215,7 @@ def test_save_grades_success(client, mock_db):
             "teacherId": 501,
             "grades": [
                 {
-                    "studentName": "Иванов И.И.",
+                    "studentName": "Иванов Иван Иваныч",
                     "grades": {"1": "5"},
                 }
             ],
@@ -245,7 +245,7 @@ def test_save_grades_invalid_value(client, mock_db):
             "teacherId": 501,
             "grades": [
                 {
-                    "studentName": "Иванов И.И.",
+                    "studentName": "Иванов Иван Иваныч",
                     "grades": {"1": "10"},
                 }
             ],
@@ -264,8 +264,8 @@ def test_get_exam_grades_table(client, mock_db):
             QueryStep(fetchone=(301,)),  # exam id
             QueryStep(
                 fetchall=[
-                    ("Иванов И.И.", "5"),
-                    ("Петров П.П.", None),
+                    ("Иванов Иван Иваныч", "5"),
+                    ("Петров Петр Петрович", None),
                 ]
             ),
         ],
@@ -300,7 +300,7 @@ def test_save_exam_grades_success(client, mock_db):
             "group": "ИБ-01",
             "teacherId": 501,
             "grades": [
-                {"studentName": "Иванов И.И.", "grade": "5"},
+                {"studentName": "Иванов Иван Иваныч", "grade": "5"},
             ],
         },
     )
@@ -328,7 +328,7 @@ def test_save_exam_grades_invalid_value(client, mock_db):
             "group": "ИБ-01",
             "teacherId": 501,
             "grades": [
-                {"studentName": "Иванов И.И.", "grade": "10"},
+                {"studentName": "Иванов Иван Иваныч", "grade": "10"},
             ],
         },
     )

@@ -7,7 +7,7 @@ def test_validate_teacher_payload_success():
     ok, error, filtered = users_api._validate_and_filter_user_payload(
         "преподаватели",
         {
-            "фио_преп": "Иванов И.И.",
+            "фио_преп": "Иванов Иван Иваныч",
             "логин": "teacher01",
             "пароль": "StrongPass!",
             "телефон": "89001234567",
@@ -18,6 +18,7 @@ def test_validate_teacher_payload_success():
 
     assert ok is True
     assert error is None
+    assert filtered is not None
     assert set(filtered.keys()) == {
         "фио_преп",
         "логин",
@@ -33,12 +34,12 @@ def test_validate_payload_missing_required():
         {
             "фио_студ": "",
             "логин": "student01",
-            "пароль": "student01",  # также нарушает правило
+            "пароль": "student01", 
         },
     )
 
     assert ok is False
-    assert "обязательно" in error
+    assert error is not None and "обязательно" in error
     assert filtered is None
 
 
@@ -76,7 +77,7 @@ def test_validate_payload_invalid_values(payload, error_msg):
     )
 
     assert ok is False
-    assert error_msg in error
+    assert error_msg is not None and error_msg in error
     assert filtered is None
 
 
@@ -91,6 +92,6 @@ def test_validate_payload_rejects_malicious_input():
     )
 
     assert ok is False
-    assert "опасный" in error
+    assert error is not None and "опасный" in error
     assert filtered is None
 

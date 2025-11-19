@@ -10,7 +10,7 @@ def test_get_expulsion_list(client, mock_db):
         [
             QueryStep(
                 description=["id_студ", "ФИО", "название_группы", "Количество_долгов"],
-                fetchall=[(1001, "Иванов И.И.", "Группа-1", 3)],
+                fetchall=[(1001, "Иванов Иван Иваныч", "22-СПО-ОИБАС-01", 3)],
             )
         ],
     )
@@ -20,15 +20,15 @@ def test_get_expulsion_list(client, mock_db):
     assert response.status_code == HTTPStatus.OK
     body = response.get_json()
     assert isinstance(body, list)
-    assert body[0]["ФИО"] == "Иванов И.И."
+    assert body[0]["ФИО"] == "Иванов Иван Иваныч"
 
 
 def test_expel_students_success(client, mock_db):
     connection = mock_db(
         expulsion_api,
         [
-            QueryStep(),  # delete id 1001
-            QueryStep(),  # delete id 1002
+            QueryStep(),  # del id 1001
+            QueryStep(),  # del id 1002
         ],
     )
 

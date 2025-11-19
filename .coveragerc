@@ -1,0 +1,18 @@
+[run]
+source = api, auth, models
+omit = 
+    api/departments_api.py
+    api/disciplines_api.py
+    api/exams_api.py
+    api/specialties_api.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*:\s*$

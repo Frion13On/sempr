@@ -10,8 +10,8 @@ def test_add_user_success(client, mock_db):
     connection = mock_db(
         users_api,
         [
-            QueryStep(fetchone=(0,)),  # логин не используется
-            QueryStep(),  # insert
+            QueryStep(fetchone=(0,)),  
+            QueryStep(),  
         ],
     )
 
@@ -79,8 +79,8 @@ def test_update_user_success(client, mock_db):
     connection = mock_db(
         users_api,
         [
-            QueryStep(fetchone=(0,)),  # unique login check
-            QueryStep(),  # update
+            QueryStep(fetchone=(0,)),  
+            QueryStep(),  
         ],
     )
 

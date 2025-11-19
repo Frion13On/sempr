@@ -101,4 +101,3 @@ def mock_db(monkeypatch):
         return connection
 
     return _apply
-
