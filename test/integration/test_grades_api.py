@@ -200,10 +200,10 @@ def test_save_grades_success(client, mock_db):
     connection = mock_db(
         grades_api,
         [
-            QueryStep(fetchone=(101,)),  # discipline id
-            QueryStep(fetchone=(2001,)),  # student id
-            QueryStep(fetchone=(0,)),  # grade exists
-            QueryStep(),  # insert
+            QueryStep(fetchone=(101,)),  
+            QueryStep(fetchone=(2001,)),  
+            QueryStep(fetchone=(0,)),  
+            QueryStep(), 
         ],
     )
 

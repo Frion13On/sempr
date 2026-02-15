@@ -5,14 +5,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Глобальный словарь для хранения пользователей
 users = {}
 
 class User(UserMixin):
-    def __init__(self, id, role_id, student_id=None):
+    def __init__(self, id, role_id, student_id=None, teacher_id=None):
         self.id = id
         self.role_id = role_id
         self.student_id = student_id
+        self.teacher_id = teacher_id
         users[id] = self
 
     def get_id(self):

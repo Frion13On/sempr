@@ -10,7 +10,7 @@
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body class="grade-layout">
-    <!-- Header Bar -->
+
     <div class="header-bar">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
@@ -42,7 +42,7 @@
 
     <div class="main-content">
         <div class="container-fluid">
-            <!-- Discipline Selection -->
+
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="row align-items-center">
@@ -60,7 +60,7 @@
                 </div>
             </div>
 
-            <!-- Statistics Cards -->
+
             <div class="card stats-card">
                 <div class="card-body">
                     <div class="row text-center">
@@ -80,7 +80,6 @@
                 </div>
             </div>
 
-            <!-- Grades Table -->
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
@@ -93,7 +92,7 @@
                             </thead>
                             <tbody></tbody>
                         </table>
-                        <!-- Empty State -->
+
                         <div class="empty-state" id="emptyState">
                             <i class="bi bi-journal"></i>
                             <p>Выберите дисциплину для просмотра оценок</p>
@@ -110,6 +109,7 @@
         window.userRole = "{{ current_user.role_id }}";
         window.studentId = "{{ current_user.student_id }}";
     </script>
+    <script src="{{ url_for('static', filename='js/grade_utils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/grades.js') }}"></script>
 </body>
 </html> 

@@ -90,6 +90,7 @@
         window.userRole = "{{ current_user.role_id }}";
         window.userId = "{{ current_user.student_id }}";
     </script>
+    <script src="{{ url_for('static', filename='js/grade_utils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/exinpgrades.js') }}"></script>
 </body>
 </html> 

@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                console.log('Received data:', data); // Debug log
+                console.log('Received data:', data); // Debug
                 if (!data.numberOfLessons || !data.students || data.students.length === 0) {
                     showEmptyState();
                     return;
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function createGradeTable(numberOfLessons, students) {
-        console.log('Creating table with students:', students); // Debug log
+        console.log('Creating table with students:', students); // Debug
 
         const thead = gradesTable.querySelector('thead tr');
         thead.innerHTML = '<th class="student-name">ФИО студента</th>';
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tbody.innerHTML = '';
 
         students.forEach(student => {
-            console.log('Processing student:', student); // Debug log
+            console.log('Processing student:', student); // Debug
             const tr = document.createElement('tr');
             
             const tdName = document.createElement('td');
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             tbody.appendChild(tr);
         });
-        // initial coloring
+
         tbody.querySelectorAll('.grade-input').forEach(applyGradeColorForInput);
     }
 
@@ -154,34 +154,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validateGradeInput(event) {
         const input = event.target;
-        const value = input.value.toUpperCase();
-        
-        if (value && !isValidGrade(value)) {
-            input.value = '';
-            return;
-        }
-        
-        input.value = value;
+        const normalized = normalizeGradeValue(input.value);
+        input.value = normalized;
         updateAbsences(input);
     }
 
     function applyGradeColorForInput(input) {
         const td = input.closest('td');
         if (!td) return;
-        td.classList.remove('grade-good', 'grade-mid', 'grade-warn', 'grade-bad', 'grade-absent');
-        const v = input.value.toUpperCase();
-        if (!v) return;
-        if (v === 'Н') { td.classList.add('grade-absent'); return; }
-        const num = parseFloat(v);
-        if (Number.isNaN(num)) return;
-        if (num >= 5) td.classList.add('grade-good');
-        else if (num >= 4) td.classList.add('grade-mid');
-        else if (num >= 3) td.classList.add('grade-warn');
-        else td.classList.add('grade-bad');
-    }
-
-    function isValidGrade(grade) {
-        return grade === 'Н' || (grade >= '1' && grade <= '5');
+        applyGradeClass(td, input.value);
     }
 
     function updateAbsences(input) {
@@ -220,8 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const studentGrades = {};
     
             inputs.forEach(input => {
-                let grade = input.value.trim().toUpperCase();
-                if (grade && !isValidGrade(grade)) grade = '';
+                const grade = normalizeGradeValue(input.value);
                 studentGrades[input.dataset.lessonNumber] = grade || null;
             });
     
@@ -264,16 +244,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
     }
     
-    function isValidGrade(grade) {
-        return grade === 'Н' || (grade >= '1' && grade <= '5');
-    }
-    
-    // Проверка корректности оценки
-    function isValidGrade(grade) {
-        return grade === 'Н' || (grade >= '1' && grade <= '5');
-    }
-    
-
     function showEmptyState() {
         gradesTable.style.display = 'none';
         emptyState.classList.remove('d-none');

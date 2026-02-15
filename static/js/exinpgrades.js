@@ -88,19 +88,16 @@ document.addEventListener('DOMContentLoaded', function() {
         students.forEach((student, index) => {
             const tr = document.createElement('tr');
             
-            // Номер ячейки
             const tdNumber = document.createElement('td');
             tdNumber.className = 'number-cell';
             tdNumber.textContent = index + 1;
             tr.appendChild(tdNumber);
             
-            // Ячейка с именем студента
             const tdName = document.createElement('td');
             tdName.className = 'student-name';
             tdName.textContent = student.name;
             tr.appendChild(tdName);
 
-            // Ячейка с оценкой
             const tdGrade = document.createElement('td');
             tdGrade.className = 'grade-cell';
             const input = document.createElement('input');
@@ -118,39 +115,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             tbody.appendChild(tr);
         });
-        // initial coloring
         tbody.querySelectorAll('.grade-input').forEach(applyGradeColorForInput);
     }
 
     function validateGradeInput(event) {
         const input = event.target;
-        const value = input.value.toUpperCase();
-        
-        if (value && !isValidGrade(value)) {
-            input.value = '';
-            return;
-        }
-        
-        input.value = value;
-    }
-
-    function isValidGrade(grade) {
-        return grade === 'Н' || (grade >= '1' && grade <= '5');
+        const normalized = normalizeGradeValue(input.value);
+        input.value = normalized;
     }
 
     function applyGradeColorForInput(input) {
         const td = input.closest('td');
         if (!td) return;
-        td.classList.remove('grade-good', 'grade-mid', 'grade-warn', 'grade-bad', 'grade-absent');
-        const v = input.value.toUpperCase();
-        if (!v) return;
-        if (v === 'Н') { td.classList.add('grade-absent'); return; }
-        const num = parseFloat(v);
-        if (Number.isNaN(num)) return;
-        if (num >= 5) td.classList.add('grade-good');
-        else if (num >= 4) td.classList.add('grade-mid');
-        else if (num >= 3) td.classList.add('grade-warn');
-        else td.classList.add('grade-bad');
+        applyGradeClass(td, input.value);
     }
 
     function saveExamGrades() {
@@ -162,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Проверяем, что window.userId существует
         if (!window.userId) {
             alert('Ошибка: ID пользователя не найден. Пожалуйста, перезагрузите страницу.');
             return;
@@ -179,12 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.forEach(row => {
             const studentName = row.querySelector('.student-name').textContent;
             const gradeInput = row.querySelector('.grade-input');
-            const grade = gradeInput.value.trim();
-            
-            if (grade && !isValidGrade(grade)) {
-                alert(`Некорректная оценка "${grade}" для студента ${studentName}. Допустимые значения: 1-5, Н`);
-                return;
-            }
+            const grade = normalizeGradeValue(gradeInput.value);
             
             grades.push({
                 studentName,
@@ -192,7 +163,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Показываем индикатор загрузки
         saveDataBtn.disabled = true;
         saveDataBtn.textContent = 'Сохранение...';
 
@@ -233,7 +203,6 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Ошибка при сохранении оценок: ' + error.message);
         })
         .finally(() => {
-            // Восстанавливаем кнопку
             saveDataBtn.disabled = false;
             saveDataBtn.textContent = 'Сохранить оценки';
         });

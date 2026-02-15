@@ -16,7 +16,6 @@ function loadDebts() {
 
             tableBody.innerHTML = '';
             
-            // Check if data is valid and is an array
             if (!data || !Array.isArray(data) || data.length === 0) {
                 document.getElementById('debtsTable').classList.add('d-none');
                 emptyState.classList.remove('d-none');
@@ -44,14 +43,11 @@ function loadDebts() {
 }
 
 function formatDate(dateString) {
-    // Check if dateString is valid and not null/undefined
     if (!dateString || dateString === 'null' || dateString === 'undefined') {
         return 'Не указано';
     }
     
     const date = new Date(dateString);
-    
-    // Check if the date is valid
     if (isNaN(date.getTime())) {
         return 'Неверная дата';
     }

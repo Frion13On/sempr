@@ -116,11 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showInfo(message) {
-        alert(message);
-    }
-
-    function showError(message) {
-        alert(message);
+        showMessage(message);
     }
 
     function attachHeaderSorting() {
@@ -173,22 +169,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const tbody = document.querySelector('#expulsionTable tbody');
         const rows = Array.from(tbody.querySelectorAll('tr'));
         const idx = sortState.index;
-        const dirMul = sortState.dir === 'asc' ? 1 : -1;
-        const collator = new Intl.Collator('ru', { numeric: true, sensitivity: 'base' });
-        rows.sort((a, b) => {
-            const offset = window.userRole === "1" ? 1 : 0;
-            const va = (a.cells[idx + offset] ? a.cells[idx + offset].textContent.trim() : '') || '';
-            const vb = (b.cells[idx + offset] ? b.cells[idx + offset].textContent.trim() : '') || '';
-            const na = parseFloat(va.replace(',', '.'));
-            const nb = parseFloat(vb.replace(',', '.'));
-            const isNum = !isNaN(na) && !isNaN(nb) && va !== '' && vb !== '';
-            let cmp = 0;
-            if (isNum) cmp = na === nb ? 0 : (na < nb ? -1 : 1);
-            else cmp = collator.compare(va, vb);
-            return cmp * dirMul;
-        });
-        const frag = document.createDocumentFragment();
-        rows.forEach(r => frag.appendChild(r));
-        tbody.appendChild(frag);
+        const offset = window.userRole === "1" ? 1 : 0;
+        const sorted = sortRows(
+            rows,
+            row => (row.cells[idx + offset] ? row.cells[idx + offset].textContent : ''),
+            sortState.dir
+        );
+        reattachRows(tbody, sorted);
     }
 }); 

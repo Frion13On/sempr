@@ -126,7 +126,7 @@ function updateAbsencesVisual(value) {
     const card = document.querySelector('.stats-card');
     if (!card || Number.isNaN(value)) return;
     card.classList.remove('absence-good', 'absence-warn', 'absence-bad');
-    // thresholds: <=1 good, <=3 warn, >3 bad
+
     if (value <= 1) {
         card.classList.add('absence-good');
     } else if (value <= 3) {

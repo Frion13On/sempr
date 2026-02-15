@@ -78,13 +78,5 @@ function updateStats(stats) {
 } 
 
 function applyGradeCellClass(cell, value) {
-    cell.classList.remove('grade-good', 'grade-mid', 'grade-warn', 'grade-bad', 'grade-absent');
-    const v = String(value).trim().toUpperCase();
-    if (v === 'Н') { cell.classList.add('grade-absent'); return; }
-    const num = parseFloat(v);
-    if (Number.isNaN(num)) return;
-    if (num >= 5) cell.classList.add('grade-good');
-    else if (num >= 4) cell.classList.add('grade-mid');
-    else if (num >= 3) cell.classList.add('grade-warn');
-    else cell.classList.add('grade-bad');
+    applyGradeClass(cell, value);
 }

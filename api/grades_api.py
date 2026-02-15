@@ -149,16 +149,11 @@ def get_group_grades():
             return jsonify({'success': False, 'error': 'Group name not provided'}), 400
         query = """
             SELECT d.название AS DisciplineName,
-                   AVG(CASE 
-                       WHEN ej.оценка = 'н/а' THEN 2
-                       WHEN ej.оценка NOT IN ('Н') AND ej.оценка ~ '^[0-9]+$'
-                       THEN CAST(ej.оценка AS REAL) 
-                       ELSE 2 
+                   AVG(CASE WHEN ej.оценка = 'н/а' THEN 2 WHEN ej.оценка NOT IN ('Н') AND ej.оценка ~ '^[0-9]+$'
+                       THEN CAST(ej.оценка AS REAL) ELSE 2 
                    END) AS AverageGrade,
                    SUM(CASE WHEN ej.оценка = 'Н' THEN 1 ELSE 0 END) AS TotalAbsences
-            FROM электронный_журнал ej
-            INNER JOIN дисциплина d ON ej.id_дисц = d.id_дисц 
-            INNER JOIN студенты s ON ej.id_студ = s.id_студ
+            FROM электронный_журнал ej INNER JOIN дисциплина d ON ej.id_дисц = d.id_дисц INNER JOIN студенты s ON ej.id_студ = s.id_студ
             WHERE s.название_группы = %s
             GROUP BY d.название
         """

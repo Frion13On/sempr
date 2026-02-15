@@ -45,73 +45,29 @@
     faculties: '/api/faculties'
   };
 
-  const rowRenderers = {
-    users_students: (row) => `
-        <td>${row['id_студ'] || ''}</td>
-        <td>${row['фио_студ'] || ''}</td>
-        <td>${row['логин'] || ''}</td>
-        <td>${row['пароль'] || ''}</td>
-        <td>${row['пол'] || ''}</td>
-        <td>${formatDate(row['дата_рождения']) || ''}</td>
-        <td>${row['телефон'] || ''}</td>
-        <td>${row['почта'] || ''}</td>
-        <td>${row['название_группы'] || ''}</td>`,
-    users_teachers: (row) => `
-        <td>${row['id_преп'] || ''}</td>
-        <td>${row['фио_преп'] || ''}</td>
-        <td>${row['логин'] || ''}</td>
-        <td>${row['пароль'] || ''}</td>
-        <td>${row['пол'] || ''}</td>
-        <td>${formatDate(row['дата_рождения']) || ''}</td>
-        <td>${row['телефон'] || ''}</td>
-        <td>${row['почта'] || ''}</td>
-        <td>${row['должность'] || ''}</td>
-        <td>${row['кафедра'] || ''}</td>`,
-    users_admins: (row) => `
-        <td>${row['код_адм'] || ''}</td>
-        <td>${row['фио_адм'] || ''}</td>
-        <td>${row['логин'] || ''}</td>
-        <td>${row['пароль'] || ''}</td>`,
-    disciplines: (row) => `
-        <td>${row['id_дисц'] || ''}</td>
-        <td>${row['название'] || ''}</td>
-        <td>${row['количество_занятий'] || ''}</td>`,
-    groups: (row) => `
-        <td>${row['название_группы'] || ''}</td>
-        <td>${row['Специальность'] || ''}</td>
-        <td>${row['курс'] || ''}</td>
-        <td>${row['Куратор'] || ''}</td>`,
-    specialties: (row) => `
-        <td>${row['id_спец'] || ''}</td>
-        <td>${row['название_спец'] || ''}</td>
-        <td>${row['уровень_образования'] || ''}</td>
-        <td>${row['кафедра'] || ''}</td>`,
-    exams: (row) => `
-        <td>${row['id_экзамен'] || ''}</td>
-        <td>${row['Дисциплина'] || ''}</td>
-        <td>${row['Преподаватель'] || ''}</td>
-        <td>${row['название_группы'] || ''}</td>
-        <td>${formatDate(row['дата_экзамена']) || ''}</td>`,
-    departments: (row) => `
-        <td>${row['назв_каф'] || ''}</td>
-        <td>${row['факультет'] || ''}</td>
-        <td>${row['заведующий'] || ''}</td>
-        <td>${row['должность_каф'] || ''}</td>
-        <td>${row['почта_каф'] || ''}</td>
-        <td>${row['тел_каф'] || ''}</td>`,
-    faculties: (row) => `
-        <td>${row['назв_факультет'] || ''}</td>
-        <td>${row['декан'] || ''}</td>
-        <td>${row['должность_ф'] || ''}</td>
-        <td>${row['почта_ф'] || ''}</td>
-        <td>${row['тел_ф'] || ''}</td>`,
-    assign_teachers_disciplines: (row) => `
-        <td>${row['ФИО_преп'] || ''}</td>
-        <td>${row['Название'] || ''}</td>`,
-    assign_specialties_disciplines: (row) => `
-        <td>${row['Название_спец'] || ''}</td>
-        <td>${row['Название'] || ''}</td>`
-  };
+  const rowFields = {
+    users_students: ['id_студ', 'фио_студ', 'логин', 'пароль', 'пол', 'дата_рождения', 'телефон', 'почта', 'название_группы'],
+    users_teachers: ['id_преп', 'фио_преп', 'логин', 'пароль', 'пол', 'дата_рождения', 'телефон', 'почта', 'должность', 'кафедра'],
+    users_admins: ['код_адм', 'фио_адм', 'логин', 'пароль'],
+    disciplines: ['id_дисц', 'название', 'количество_занятий'],
+    groups: ['название_группы','Специальность','курс','Куратор'],
+    specialties: ['id_спец','название_спец','уровень_образования','кафедра'],
+    exams: ['id_экзамен','Дисциплина','Преподаватель','название_группы','дата_экзамена'],
+    departments: ['назв_каф','факультет','заведующий','должность_каф','почта_каф','тел_каф'],
+    faculties: ['назв_факультет','декан','должность_ф','почта_ф','тел_ф'],
+    assign_teachers_disciplines: ['ФИО_преп','Название'],
+    assign_specialties_disciplines: ['Название_спец','Название']
+};
+
+function renderRow(entityKey, row) {
+    return rowFields[entityKey].map(field => {
+        let value = row[field] || '';
+        if (typeof value === "string" && field.toLowerCase().includes('дата')) {
+            value = formatDate(value);
+        }
+        return `<td>${value}</td>`;
+    }).join('');
+}
 
   const idGetters = {
     users_students: (row) => row['id_студ'],
@@ -197,7 +153,7 @@
     const phoneInputs = document.querySelectorAll('input[type="tel"]');
     phoneInputs.forEach(input => {
       input.addEventListener('input', formatPhoneInput);
-      input.addEventListener('keypress', validatePhoneInput);
+      input.addEventListener('keypress', validatePhoneKeypress);
     });
     setTimeout(() => {
       entitySelector.value = 'users_admins';
@@ -339,32 +295,13 @@
     if (!state) return;
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const idx = state.index;
-    const dirMul = state.dir === 'asc' ? 1 : -1;
-    const collator = new Intl.Collator('ru', { numeric: true, sensitivity: 'base' });
-    rows.sort((a, b) => {
-      const va = (a.cells[idx] ? a.cells[idx].textContent.trim() : '') || '';
-      const vb = (b.cells[idx] ? b.cells[idx].textContent.trim() : '') || '';
-      const na = parseFloat(va.replace(',', '.'));
-      const nb = parseFloat(vb.replace(',', '.'));
-      const isNum = !isNaN(na) && !isNaN(nb) && va !== '' && vb !== '';
-      const da = Date.parse(va);
-      const db = Date.parse(vb);
-      const isDate = !isNaN(da) && !isNaN(db);
-      let cmp = 0;
-      if (isNum) cmp = na === nb ? 0 : (na < nb ? -1 : 1);
-      else if (isDate) cmp = da === db ? 0 : (da < db ? -1 : 1);
-      else cmp = collator.compare(va, vb);
-      return cmp * dirMul;
-    });
-    const frag = document.createDocumentFragment();
-    rows.forEach(r => frag.appendChild(r));
-    tbody.appendChild(frag);
+    const sorted = sortRows(rows, row => (row.cells[idx] ? row.cells[idx].textContent : ''), state.dir);
+    reattachRows(tbody, sorted);
   }
 
   // Рендер строк
   function createTableRow(row, entity) {
-    const renderer = rowRenderers[entity];
-    return renderer ? renderer(row) : '';
+    return renderRow(entity, row);
   }
 
   function getRowId(row, entity) {
@@ -629,7 +566,6 @@
     });
   }
 
-  // Вспомогательные
   function onReload() {
     if (requestInFlight) return;
     loadData(currentEntity);
@@ -781,73 +717,7 @@
   }
 
   function validateForm() {
-    const formRoot = forms[currentEntity];
-    if (!formRoot) return true;
-    const requiredFields = formRoot.querySelectorAll('input[required], select[required]');
-    let isValid = true;
-
-    requiredFields.forEach(field => {
-      const isHidden = field.offsetParent === null;
-      if (isHidden) return;
-      if (!String(field.value || '').trim()) {
-        field.classList.add('is-invalid');
-        isValid = false;
-      } else {
-        field.classList.remove('is-invalid');
-      }
-    });
-
-    if (isValid) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const isValidPhone = (v) => v === '' || /^\d{1,11}$/.test(v);
-
-      if (currentEntity === 'users_students') {
-        const phone = sel('s_phone');
-        const email = sel('s_email');
-        const login = sel('s_login');
-        const password = sel('s_password');
-        if (phone && !isValidPhone(phone.value.trim())) { phone.classList.add('is-invalid'); isValid = false; }
-        if (email && email.value.trim() && !emailRegex.test(email.value.trim())) { email.classList.add('is-invalid'); isValid = false; }
-        if (login && password && login.value && password.value && login.value === password.value) {
-          login.classList.add('is-invalid');
-          password.classList.add('is-invalid');
-          isValid = false;
-        }
-      } else if (currentEntity === 'users_teachers') {
-        const phone = sel('t_phone');
-        const email = sel('t_email');
-        const login = sel('t_login');
-        const password = sel('t_password');
-        if (phone && !isValidPhone(phone.value.trim())) { phone.classList.add('is-invalid'); isValid = false; }
-        if (email && email.value.trim() && !emailRegex.test(email.value.trim())) { email.classList.add('is-invalid'); isValid = false; }
-        if (login && password && login.value && password.value && login.value === password.value) {
-          login.classList.add('is-invalid');
-          password.classList.add('is-invalid');
-          isValid = false;
-        }
-      } else if (currentEntity === 'users_admins') {
-        const login = sel('a_login');
-        const password = sel('a_password');
-        if (login && password && login.value && password.value && login.value === password.value) {
-          login.classList.add('is-invalid');
-          password.classList.add('is-invalid');
-          isValid = false;
-        }
-      } else if (currentEntity === 'departments') {
-        const phone = sel('df_dep_phone');
-        const email = sel('df_dep_email');
-        if (phone && phone.value.trim() && !isValidPhone(phone.value.trim())) { phone.classList.add('is-invalid'); isValid = false; }
-        if (email && email.value.trim() && !emailRegex.test(email.value.trim())) { email.classList.add('is-invalid'); isValid = false; }
-      } else if (currentEntity === 'faculties') {
-        const phone = sel('df_fac_phone');
-        const email = sel('df_fac_email');
-        if (phone && phone.value.trim() && !isValidPhone(phone.value.trim())) { phone.classList.add('is-invalid'); isValid = false; }
-        if (email && email.value.trim() && !emailRegex.test(email.value.trim())) { email.classList.add('is-invalid'); isValid = false; }
-      }
-    }
-
-    if (!isValid) showError('Проверьте корректность заполнения полей');
-    return isValid;
+    return validateAdminManageForm(currentEntity, forms, sel, showError);
   }
 
   function clearForm() {
@@ -880,122 +750,10 @@
     e.target.value = value;
   }
 
-  function validatePhoneInput(e) {
-    if (e.key === 'Backspace' || e.key === 'Delete') return true;
-    if (e.target.value.length >= 11) {
-      e.preventDefault();
-      return false;
-    }
-    if (!/^\d$/.test(e.key)) {
-      e.preventDefault();
-      return false;
-    }
-  }
-
   function formatDate(date) {
     if (!date) return '';
     const d = new Date(date);
     return d.toISOString().split('T')[0];
-  }
-
-  // Уведомления
-  function showMessage(message) {
-    renderAlert('success', message);
-  }
-
-  function showError(message) {
-    renderAlert('danger', message);
-  }
-
-  function renderAlert(kind, message) {
-    const { content, show, hide } = ensureOverlay();
-    content.innerHTML = '';
-    const box = document.createElement('div');
-    box.style.background = 'var(--color-card-bg)';
-    box.style.color = 'var(--color-text)';
-    box.style.minWidth = '320px';
-    box.style.maxWidth = '560px';
-    box.style.border = `1px solid var(--color-border)`;
-    box.style.borderRadius = '8px';
-    box.style.boxShadow = 'var(--elevation-2)';
-    box.style.padding = '16px';
-    const msg = document.createElement('div');
-    msg.className = `alert alert-${kind} show`;
-    msg.textContent = message;
-    msg.style.margin = '0';
-    content.appendChild(box);
-    box.appendChild(msg);
-    show();
-    setTimeout(() => hide(), 2000);
-  }
-
-  function showConfirm(message, onConfirm) {
-    const { content, show, hide } = ensureOverlay(true);
-    content.innerHTML = '';
-    const box = document.createElement('div');
-    box.style.background = 'var(--color-card-bg)';
-    box.style.color = 'var(--color-text)';
-    box.style.minWidth = '320px';
-    box.style.maxWidth = '560px';
-    box.style.border = `1px solid var(--color-border)`;
-    box.style.borderRadius = '8px';
-    box.style.boxShadow = 'var(--elevation-2)';
-    box.style.padding = '16px';
-    const title = document.createElement('div');
-    title.textContent = message;
-    title.style.fontWeight = '600';
-    title.style.marginBottom = '12px';
-    const buttons = document.createElement('div');
-    buttons.style.display = 'flex';
-    buttons.style.gap = '8px';
-    buttons.style.justifyContent = 'flex-end';
-    const btnYes = document.createElement('button');
-    btnYes.className = 'btn btn-danger btn-sm';
-    btnYes.textContent = 'Удалить';
-    const btnNo = document.createElement('button');
-    btnNo.className = 'btn btn-secondary btn-sm';
-    btnNo.textContent = 'Отмена';
-    buttons.appendChild(btnNo);
-    buttons.appendChild(btnYes);
-    content.appendChild(box);
-    box.appendChild(title);
-    box.appendChild(buttons);
-    show();
-    const close = () => hide();
-    btnNo.addEventListener('click', close);
-    btnYes.addEventListener('click', () => { close(); onConfirm && onConfirm(); });
-  }
-
-  function ensureOverlay(withBackdrop = false) {
-    let overlay = document.getElementById('ui-overlay');
-    let content;
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'ui-overlay';
-      overlay.style.position = 'fixed';
-      overlay.style.inset = '0';
-      overlay.style.zIndex = '3000';
-      overlay.style.display = 'flex';
-      overlay.style.alignItems = 'center';
-      overlay.style.justifyContent = 'center';
-      overlay.style.pointerEvents = 'none';
-      const inner = document.createElement('div');
-      inner.id = 'ui-overlay-inner';
-      inner.style.pointerEvents = 'auto';
-      overlay.appendChild(inner);
-      document.body.appendChild(overlay);
-    }
-    content = document.getElementById('ui-overlay-inner');
-    const show = () => {
-      overlay.style.display = 'flex';
-      overlay.style.background = withBackdrop ? 'rgba(0,0,0,0.35)' : 'transparent';
-    };
-    const hide = () => {
-      overlay.style.display = 'none';
-      overlay.style.background = 'transparent';
-      content.innerHTML = '';
-    };
-    return { container: overlay, content, show, hide };
   }
 
   if (document.readyState === 'loading') {
