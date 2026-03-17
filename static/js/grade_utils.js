@@ -34,5 +34,19 @@ function normalizeGradeValue(raw) {
   return '';
 }
 
+function updateAbsencesVisual(value) {
+    const card = document.querySelector('.stats-card');
+    if (!card || Number.isNaN(value)) return;
+    card.classList.remove('absence-good', 'absence-warn', 'absence-bad');
+
+    if (value <= 1) {
+        card.classList.add('absence-good');
+    } else if (value <= 3) {
+        card.classList.add('absence-warn');
+    } else {
+        card.classList.add('absence-bad');
+    }
+}
+
 
 

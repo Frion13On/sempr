@@ -90,7 +90,6 @@ function loadGroupGrades(groupName = null) {
                     tableBody.appendChild(row);
                 });
 
-                // Fallback: compute attendance % per discipline if not provided by API
                 if (groupNameResolved) {
                     const rows = tableBody.querySelectorAll('tr');
                     rows.forEach((tr) => {
@@ -120,20 +119,6 @@ function loadGroupGrades(groupName = null) {
             console.error('Error loading grades:', error);
             alert('Ошибка при загрузке данных');
         });
-} 
-
-function updateAbsencesVisual(value) {
-    const card = document.querySelector('.stats-card');
-    if (!card || Number.isNaN(value)) return;
-    card.classList.remove('absence-good', 'absence-warn', 'absence-bad');
-
-    if (value <= 1) {
-        card.classList.add('absence-good');
-    } else if (value <= 3) {
-        card.classList.add('absence-warn');
-    } else {
-        card.classList.add('absence-bad');
-    }
 }
 
 async function computeAttendancePercent(discipline, group) {

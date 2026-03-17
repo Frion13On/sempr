@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 from models import get_db_connection
 import re
+from api_access import require_roles
 
 departments_api = Blueprint('departments_api', __name__)
 
@@ -12,6 +14,8 @@ def _is_valid_phone(v: str) -> bool:
     return v.isdigit() and len(v) <= 11
 
 @departments_api.route('/api/get_departments')
+@login_required
+@require_roles(1, 2, 3)
 def get_departments():
     try:
         with get_db_connection() as conn:
@@ -24,6 +28,8 @@ def get_departments():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @departments_api.route('/api/departments_list')
+@login_required
+@require_roles(1, 2, 3)
 def get_departments_list():
     try:
         query = """
@@ -47,6 +53,8 @@ def get_departments_list():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @departments_api.route('/api/departments', methods=['POST'])
+@login_required
+@require_roles(1)
 def add_department():
     try:
         data = request.json
@@ -80,6 +88,8 @@ def add_department():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @departments_api.route('/api/departments/<department_name>', methods=['PUT'])
+@login_required
+@require_roles(1)
 def update_department(department_name):
     try:
         data = request.json
@@ -112,6 +122,8 @@ def update_department(department_name):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @departments_api.route('/api/departments/<department_name>', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def delete_department(department_name):
     try:
         with get_db_connection() as conn:
@@ -124,6 +136,8 @@ def delete_department(department_name):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @departments_api.route('/api/faculties')
+@login_required
+@require_roles(1, 2, 3)
 def get_faculties():
     try:
         query = """
@@ -147,6 +161,8 @@ def get_faculties():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @departments_api.route('/api/faculties', methods=['POST'])
+@login_required
+@require_roles(1)
 def add_faculty():
     try:
         data = request.json
@@ -178,6 +194,8 @@ def add_faculty():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @departments_api.route('/api/faculties/<faculty_name>', methods=['PUT'])
+@login_required
+@require_roles(1)
 def update_faculty(faculty_name):
     try:
         data = request.json
@@ -210,6 +228,8 @@ def update_faculty(faculty_name):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @departments_api.route('/api/faculties/<faculty_name>', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def delete_faculty(faculty_name):
     try:
         with get_db_connection() as conn:

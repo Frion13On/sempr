@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/api/exam/grades/save', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                ...window.withCsrfHeader({ 'Content-Type': 'application/json' }),
             },
             body: JSON.stringify({
                 discipline,

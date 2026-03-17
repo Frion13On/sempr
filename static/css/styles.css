@@ -1,4 +1,4 @@
-/* ========== Variables ========== */
+/* Переменные */
 :root {
     --color-primary: #007bff;
     --color-primary-dark: #0056b3;
@@ -47,7 +47,7 @@
     --header-gradient-end: #001B44;
 }
 
-/* ========== Reset & Base ========== */
+/* Сброс и базовые стили */
 * {
     margin: 0;
     padding: 0;
@@ -68,7 +68,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* ========== Login Layout ========== */
+/* Разметка страницы входа */
 .login-layout .main-content {
     display: flex;
     justify-content: center;
@@ -102,7 +102,7 @@ input[type="password"]::-ms-reveal {
     display: none;
 }
 
-/* ========== Header ========== */
+/* Шапка сайта */
 .header-bar {
     background: linear-gradient(135deg, var(--header-gradient-start), var(--header-gradient-end));
     color: #fff;
@@ -140,7 +140,7 @@ input[type="password"]::-ms-reveal {
     color: transparent;
 }
 
-/* ========== Navigation ========== */
+/* Навигация */
 .nav-btn {
     min-width: 80px;
     background: transparent;
@@ -161,14 +161,14 @@ input[type="password"]::-ms-reveal {
   }
   .card-title {color: var(--color-text);}
 
-/* ========== Containers ========== */
+  /* Контейнеры */
 .main-content,
 .container {
     padding: var(--space-md);
     overflow: visible;
 }
 
-/* ========== Cards ========== */
+/* Карточки */
 .card {
     background: var(--color-card-bg);
     border-radius: var(--radius-sm);
@@ -183,7 +183,7 @@ input[type="password"]::-ms-reveal {
     padding: 1rem;
 }
 
-/* ========== App Cards ========== */
+/* Карточки приложений */
 .app-card {
     background: var(--color-card-bg);
     border-radius: var(--radius-md);
@@ -225,7 +225,7 @@ input[type="password"]::-ms-reveal {
     margin-bottom: 0.5rem;
 }
 
-/* ========== Cards Row ========== */
+/* Ряд карточек */
 .cards-row {
     display: flex;
     flex-wrap: wrap;
@@ -252,7 +252,7 @@ input[type="password"]::-ms-reveal {
     }
 }
 
-/* ========== Tables ========== */
+/* Таблицы */
 .table-responsive {
     border-radius: var(--radius-sm);
     overflow-x: auto;
@@ -306,7 +306,7 @@ input[type="password"]::-ms-reveal {
     background-color: rgba(255,193,7,0.1);
 }
 
-/* ========== Forms ========== */
+/* Формы */
 .form-label {
     font-weight: 600;
     margin-bottom: 0.4rem;
@@ -314,7 +314,6 @@ input[type="password"]::-ms-reveal {
     font-size: 0.8rem;
 }
 
-/* Better readability for muted/secondary text in dark theme */
 [data-theme="dark"] .text-muted,
 [data-theme="dark"] .text-secondary,
 [data-theme="dark"] .form-text {
@@ -387,7 +386,7 @@ textarea:focus {
     margin-right: 0.5rem;
 }
 
-/* ========== Empty State ========== */
+/*Пустое  */
 .empty-state {
     text-align: center;
     padding: 25px;
@@ -408,7 +407,7 @@ textarea:focus {
     margin-bottom: 0;
 }
 
-/* ========== Admin Layout ========== */
+/* администратор */
 .admin-layout .main-content {
     display: flex;
     gap: var(--space-md);
@@ -440,7 +439,7 @@ textarea:focus {
     height: 100%;
 }
 
-/* ========== Form Containers ========== */
+/* Контейнеры форм */
 .form-container {
     background: var(--color-card-bg);
     padding: var(--form-padding);
@@ -465,7 +464,7 @@ textarea:focus {
     font-size: 0.95rem;
 }
 
-/* ========== Action Buttons ========== */
+/* Кнопки */
 .action-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -501,7 +500,7 @@ textarea:focus {
     margin-inline-end: 0.5rem;
 }
 
-/* ========== Grades & Stats ========== */
+/* Оценки и статистика */
 .grade-layout .table-container {
     max-width: 100%;
     overflow-x: auto;
@@ -560,17 +559,14 @@ textarea:focus {
 .grade-bad  { color: #dc3545 !important; font-weight: 600; }
 [data-theme="dark"] .grade-mid  { color: #9edf6a !important; }
 [data-theme="dark"] .grade-warn { color: #ffc860 !important; }
-/* absent 'Н' blue */
 .grade-absent { color: #0d6efd !important; font-weight: 600; }
 
-/* Background tint when class applied on TD (inputs inherit background) */
 td.grade-good { background: rgba(25, 135, 84, 0.12) !important; }
 td.grade-mid  { background: rgba(139, 195, 74, 0.18) !important; }
 td.grade-warn { background: rgba(255, 193, 7, 0.18) !important; }
 td.grade-bad  { background: rgba(220, 53, 69, 0.15) !important; }
 td.grade-absent { background: rgba(13, 110, 253, 0.15) !important; }
 
-/* Input border matches status for better affordance */
 td.grade-good .grade-input { border-color: #198754 !important; }
 td.grade-mid  .grade-input { border-color: #8BC34A !important; }
 td.grade-warn .grade-input { border-color: #ff9f1a !important; }
@@ -583,11 +579,11 @@ td.grade-absent .grade-input { border-color: #0d6efd !important; }
 .info-value { font-size: 1rem; color: var(--color-text); margin: 0; }
 .info-tooltip { cursor: help; border-bottom: 1px dashed var(--color-muted); }
 
-/* ========== Alerts ========== */
+/* Уведомления */
 .alert { display: none; margin-top: 10px; }
 .alert.show { display: block; }
 
-/* ========== Responsive ========== */
+/* Адаптивность */
 @media (max-width: 992px) {
     .admin-layout .left-panel { width: 30%; }
     .admin-layout .right-panel { width: 70%; margin-left: 30%; }
@@ -617,12 +613,10 @@ td.grade-absent .grade-input { border-color: #0d6efd !important; }
     .grade-cell { width: 70px; }
 }
 
-/* ========== Reduced motion ========== */
 @media (prefers-reduced-motion: reduce) {
     .card, .btn, .app-card { transition: none !important; animation: none !important; }
 }
 
-/* ========== Print ========== */
 @media print {
     body { background: #fff; color: #000; }
     .no-print { display: none !important; }

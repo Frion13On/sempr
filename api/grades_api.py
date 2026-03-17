@@ -1,17 +1,20 @@
-from flask import Blueprint, request, jsonify
-from flask_login import login_required
+from flask import Blueprint, request, jsonify, current_app
+from flask_login import login_required, current_user
 from models import get_db_connection
 from datetime import datetime
+from api_access import require_roles, require_same_user_id
 
 grades_api = Blueprint('grades_api', __name__)
 
 @grades_api.route('/api/student/debts')
 @login_required
+@require_roles(3)
+@require_same_user_id(param='student_id', user_attr='student_id', sources=('args',))
 def get_student_debts():
     try:
-        student_id = request.args.get('student_id')
+        student_id = request.args.get('student_id') or getattr(current_user, 'student_id', None)
         if not student_id:
-            return jsonify({'success': False, 'error': 'Student ID not provided'}), 400
+            return jsonify({'success': False, 'error': 'Student ID not found in session'}), 400
         query = """
             SELECT d.название AS DisciplineName, 
                    e.дата_экзамена AS ExamDate,
@@ -40,11 +43,13 @@ def get_student_debts():
 
 @grades_api.route('/api/student/disciplines')
 @login_required
+@require_roles(3)
+@require_same_user_id(param='student_id', user_attr='student_id', sources=('args',))
 def get_student_disciplines():
     try:
-        student_id = request.args.get('student_id')
+        student_id = request.args.get('student_id') or getattr(current_user, 'student_id', None)
         if not student_id:
-            return jsonify({'success': False, 'error': 'Student ID not provided'}), 400
+            return jsonify({'success': False, 'error': 'Student ID not found in session'}), 400
         query = """
             SELECT DISTINCT d.название 
             FROM электронный_журнал ej 
@@ -63,9 +68,11 @@ def get_student_disciplines():
 
 @grades_api.route('/api/student/grades')
 @login_required
+@require_roles(3)
+@require_same_user_id(param='student_id', user_attr='student_id', sources=('args',))
 def get_student_grades():
     try:
-        student_id = request.args.get('student_id')
+        student_id = request.args.get('student_id') or getattr(current_user, 'student_id', None)
         discipline = request.args.get('discipline')
         if not student_id or not discipline:
             return jsonify({'success': False, 'error': 'Missing required parameters'}), 400
@@ -116,11 +123,13 @@ def get_student_grades():
 
 @grades_api.route('/api/teacher/groups')
 @login_required
+@require_roles(2)
+@require_same_user_id(param='teacher_id', user_attr='teacher_id', sources=('args',))
 def get_teacher_groups():
     try:
-        teacher_id = request.args.get('teacher_id')
+        teacher_id = request.args.get('teacher_id') or getattr(current_user, 'teacher_id', None)
         if not teacher_id:
-            return jsonify({'success': False, 'error': 'Teacher ID not provided'}), 400
+            return jsonify({'success': False, 'error': 'Teacher ID not found in session'}), 400
         query = "SELECT название_группы FROM группы WHERE куратор = %s"
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -137,6 +146,14 @@ def get_group_grades():
     try:
         student_id = request.args.get('student_id')
         group_name = request.args.get('group')
+        if not current_app.config.get("LOGIN_DISABLED"):
+            # Student can only access their own group stats; teachers/admins must pass explicit group.
+            if int(getattr(current_user, "role_id", -1)) == 3:
+                if student_id and str(student_id) != str(getattr(current_user, "student_id", "")):
+                    return jsonify({'success': False, 'error': 'Access denied'}), 403
+                student_id = getattr(current_user, "student_id", None)
+            elif int(getattr(current_user, "role_id", -1)) not in (1, 2):
+                return jsonify({'success': False, 'error': 'Access denied'}), 403
         if student_id and not group_name:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
@@ -187,11 +204,13 @@ def get_group_grades():
 
 @grades_api.route('/api/teacher/disciplines')
 @login_required
+@require_roles(2)
+@require_same_user_id(param='teacher_id', user_attr='teacher_id', sources=('args',))
 def get_teacher_disciplines():
     try:
-        teacher_id = request.args.get('teacher_id')
+        teacher_id = request.args.get('teacher_id') or getattr(current_user, 'teacher_id', None)
         if not teacher_id:
-            return jsonify({'success': False, 'error': 'Teacher ID not provided'}), 400
+            return jsonify({'success': False, 'error': 'Teacher ID not found in session'}), 400
 
         query = """
             SELECT DISTINCT d.название 
@@ -254,6 +273,7 @@ def get_final_grades():
 
 @grades_api.route('/api/grades/table')
 @login_required
+@require_roles(2)
 def get_grades_table():
     try:
         discipline = request.args.get('discipline')
@@ -316,6 +336,7 @@ def get_grades_table():
 
 @grades_api.route('/api/grades/save', methods=['POST'])
 @login_required
+@require_roles(2)
 def save_grades():
     try:
         data = request.json
@@ -325,6 +346,10 @@ def save_grades():
         for field in required_fields:
             if field not in data:
                 return jsonify({'success': False, 'error': f'Missing {field}'}), 400
+        if not current_app.config.get("LOGIN_DISABLED"):
+            if str(data.get("teacherId")) != str(getattr(current_user, "teacher_id", "")):
+                return jsonify({'success': False, 'error': 'Access denied'}), 403
+            data["teacherId"] = getattr(current_user, "teacher_id", data["teacherId"])
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id_дисц FROM дисциплина WHERE название = %s", [data['discipline']])
@@ -389,6 +414,7 @@ def save_grades():
 
 @grades_api.route('/api/exam/grades/table')
 @login_required
+@require_roles(2)
 def get_exam_grades_table():
     try:
         discipline = request.args.get('discipline')
@@ -433,6 +459,7 @@ def get_exam_grades_table():
 
 @grades_api.route('/api/exam/grades/save', methods=['POST'])
 @login_required
+@require_roles(2)
 def save_exam_grades():
     try:
         data = request.json
@@ -442,6 +469,10 @@ def save_exam_grades():
         for field in required_fields:
             if field not in data:
                 return jsonify({'success': False, 'error': f'Missing {field}'}), 400
+        if not current_app.config.get("LOGIN_DISABLED"):
+            if str(data.get("teacherId")) != str(getattr(current_user, "teacher_id", "")):
+                return jsonify({'success': False, 'error': 'Access denied'}), 403
+            data["teacherId"] = getattr(current_user, "teacher_id", data["teacherId"])
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id_дисц FROM дисциплина WHERE название = %s", [data['discipline']])

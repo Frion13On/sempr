@@ -1,9 +1,13 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 from models import get_db_connection
+from api_access import require_roles
 
 exams_api = Blueprint('exams_api', __name__)
 
 @exams_api.route('/api/exams')
+@login_required
+@require_roles(1)
 def get_exams():
     try:
         search = request.args.get('search', '')
@@ -39,6 +43,8 @@ def get_exams():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @exams_api.route('/api/exams', methods=['POST'])
+@login_required
+@require_roles(1)
 def add_exam():
     try:
         data = request.json
@@ -75,6 +81,8 @@ def add_exam():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @exams_api.route('/api/exams/<int:exam_id>', methods=['PUT'])
+@login_required
+@require_roles(1)
 def update_exam(exam_id):
     try:
         data = request.json
@@ -108,6 +116,8 @@ def update_exam(exam_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @exams_api.route('/api/exams/<int:exam_id>', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def delete_exam(exam_id):
     try:
         with get_db_connection() as conn:

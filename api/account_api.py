@@ -1,16 +1,20 @@
 from flask import Blueprint, request, jsonify
-from flask_login import login_required
+from flask_login import login_required, current_user
 from models import get_db_connection
+from password_utils import hash_password, is_strong_password
+from api_access import require_roles, require_same_user_id
 
 account_api = Blueprint('account_api', __name__)
 
 @account_api.route('/api/account/student')
 @login_required
+@require_roles(3)
+@require_same_user_id(param='user_id', user_attr='student_id', sources=('args',))
 def get_student_account():
     try:
-        student_id = request.args.get('user_id')
+        student_id = request.args.get('user_id') or getattr(current_user, 'student_id', None)
         if not student_id:
-            return jsonify({'success': False, 'error': 'Student ID not provided'}), 400
+            return jsonify({'success': False, 'error': 'Student ID not found in session'}), 400
 
         query = """
             SELECT s.фио_студ AS name, s.название_группы AS groups, 
@@ -55,11 +59,13 @@ def get_student_account():
 
 @account_api.route('/api/account/teacher')
 @login_required
+@require_roles(2)
+@require_same_user_id(param='user_id', user_attr='teacher_id', sources=('args',))
 def get_teacher_account():
     try:
-        teacher_id = request.args.get('user_id')
+        teacher_id = request.args.get('user_id') or getattr(current_user, 'teacher_id', None)
         if not teacher_id:
-            return jsonify({'success': False, 'error': 'Teacher ID not provided'}), 400
+            return jsonify({'success': False, 'error': 'Teacher ID not found in session'}), 400
         query = """
             SELECT t.фио_преп AS name, k.назв_каф AS department, 
                    f.назв_факультет AS faculty,
@@ -103,15 +109,21 @@ def get_teacher_account():
 
 @account_api.route('/api/account/student/password', methods=['PUT'])
 @login_required
+@require_roles(3)
+@require_same_user_id(param='user_id', user_attr='student_id', sources=('json',))
 def update_student_password():
     try:
         data = request.json
         if not data or 'user_id' not in data or 'new_password' not in data:
             return jsonify({'success': False, 'error': 'Missing required data'}), 400
-        query = "UPDATE студенты SET пароль = %s WHERE id_студ = %s"
+        ok, err = is_strong_password(str(data['new_password']))
+        if not ok:
+            return jsonify({'success': False, 'error': err}), 400
+        password_hash = hash_password(data['new_password'])
+        query = "UPDATE авторизация SET пароль = %s WHERE id = (SELECT user_id FROM студенты WHERE id_студ = %s)"
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, [data['new_password'], data['user_id']])
+            cursor.execute(query, [password_hash, data['user_id']])
             conn.commit()
             return jsonify({'success': True})
     except Exception as e:
@@ -120,15 +132,21 @@ def update_student_password():
 
 @account_api.route('/api/account/teacher/password', methods=['PUT'])
 @login_required
+@require_roles(2)
+@require_same_user_id(param='user_id', user_attr='teacher_id', sources=('json',))
 def update_teacher_password():
     try:
         data = request.json
         if not data or 'user_id' not in data or 'new_password' not in data:
             return jsonify({'success': False, 'error': 'Missing required data'}), 400
-        query = "UPDATE преподаватели SET пароль = %s WHERE id_преп = %s"
+        ok, err = is_strong_password(str(data['new_password']))
+        if not ok:
+            return jsonify({'success': False, 'error': err}), 400
+        password_hash = hash_password(data['new_password'])
+        query = "UPDATE авторизация SET пароль = %s WHERE id = (SELECT user_id FROM преподаватели WHERE id_преп = %s)"
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, [data['new_password'], data['user_id']])
+            cursor.execute(query, [password_hash, data['user_id']])
             conn.commit()
             return jsonify({'success': True})
     except Exception as e:

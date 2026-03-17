@@ -8,15 +8,20 @@ def test_admin_user_management_flow(client, mock_db):
     connection = mock_db(
         users_api,
         [
-            QueryStep(fetchone=(0,)),  # add_user unique check
-            QueryStep(),  # add_user insert
-            QueryStep(  # get_users list
+            QueryStep(fetchone=(0,)),   # add_user: проверка логина в авторизация
+            QueryStep(fetchone=(1,)),   # add_user: INSERT авторизация RETURNING id
+            QueryStep(),                 # add_user: INSERT администраторы
+            QueryStep(
                 description=["код_адм", "фио_адм", "логин", "пароль"],
                 fetchall=[(1, "Администратор Тест", "admin_test", "secret")],
             ),
-            QueryStep(fetchone=(0,)),  # update_user unique check
-            QueryStep(),  # update_user update
-            QueryStep(),  # delete_user delete
+            QueryStep(fetchone=(1,)),   # update_user: user_id из администраторы
+            QueryStep(fetchone=(0,)),   # update_user: проверка логина в авторизация
+            QueryStep(),                 # update_user: UPDATE авторизация
+            QueryStep(),                 # update_user: UPDATE администраторы
+            QueryStep(fetchone=(1,)),   # delete_user: user_id
+            QueryStep(),                 # delete_user: DELETE администраторы
+            QueryStep(),                 # delete_user: DELETE авторизация
         ],
     )
 
@@ -27,7 +32,7 @@ def test_admin_user_management_flow(client, mock_db):
             "data": {
                 "фио_адм": "Администратор Тест",
                 "логин": "admin_test",
-                "пароль": "secret123",
+                "пароль": "Secret123!",
             },
         },
     )
@@ -53,7 +58,7 @@ def test_admin_user_management_flow(client, mock_db):
             "data": {
                 "фио_адм": "Администратор Обновленный",
                 "логин": "admin_test",
-                "пароль": "new_secret",
+                "пароль": "New_secret1!",
             },
         },
     )
@@ -70,14 +75,12 @@ def test_admin_user_management_flow(client, mock_db):
     assert delete_response.status_code == HTTPStatus.OK
 
     executed_queries = [stmt for stmt, _ in connection._cursor.executed]
-    assert executed_queries[0] == "SELECT COUNT(*) FROM администраторы WHERE логин = %s"
-    assert any(
-        stmt.startswith("SELECT COUNT(*) FROM администраторы WHERE логин = %s AND код_адм <> %s")
-        for stmt in executed_queries
-    )
+    assert executed_queries[0] == "SELECT COUNT(*) FROM авторизация WHERE логин = %s"
+    assert any("SELECT COUNT(*) FROM авторизация" in stmt and "AND id <> %s" in stmt for stmt in executed_queries)
     assert any("INSERT INTO администраторы" in stmt for stmt in executed_queries)
-    assert any("UPDATE администраторы" in stmt for stmt in executed_queries[-2:])
-    assert executed_queries[-1].startswith("DELETE FROM администраторы")
+    assert any("UPDATE администраторы" in stmt for stmt in executed_queries)
+    assert any("DELETE FROM администраторы" in stmt for stmt in executed_queries)
+    assert any("DELETE FROM авторизация" in stmt for stmt in executed_queries)
 
 
 def test_teacher_grade_entry_flow(client, mock_db):

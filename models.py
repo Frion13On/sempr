@@ -9,7 +9,7 @@ users = {}
 
 class User(UserMixin):
     def __init__(self, id, role_id, student_id=None, teacher_id=None):
-        self.id = id
+        self.id = id  
         self.role_id = role_id
         self.student_id = student_id
         self.teacher_id = teacher_id
@@ -19,7 +19,6 @@ class User(UserMixin):
         return str(self.id)
 
 def get_db_connection():
-    """Создает подключение к базе данных PostgreSQL"""
     try:
         conn = psycopg2.connect(os.getenv('DATABASE_URL'))
         return conn
@@ -28,5 +27,10 @@ def get_db_connection():
         raise
 
 def get_user_by_id(user_id):
-    """Получает пользователя по ID"""
-    return users.get(user_id)
+    if user_id is None:
+        return None
+    try:
+        key = int(user_id)
+    except (TypeError, ValueError):
+        return None
+    return users.get(key)

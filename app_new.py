@@ -1,9 +1,9 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 from dotenv import load_dotenv
 import os
 
-# Импорт модулей
 from models import get_user_by_id
 from routes.auth_routes import auth_bp
 from routes.admin_routes import admin_bp
@@ -11,7 +11,6 @@ from routes.teacher_routes import teacher_bp
 from routes.student_routes import student_bp
 from api.users_api import users_api
 
-# Импорт остальных API модулей
 from api.disciplines_api import disciplines_api
 from api.groups_api import groups_api
 from api.grades_api import grades_api
@@ -26,8 +25,19 @@ load_dotenv()
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here')
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', '0') == '1'
+    app.config['WTF_CSRF_TIME_LIMIT'] = 60 * 60 * 2  # 2 hours
     
-    # Настройка Flask-Login
+    csrf = CSRFProtect()
+    csrf.init_app(app)
+    app.jinja_env.globals['csrf_token'] = generate_csrf
+    
+    @app.get('/api/csrf')
+    def csrf_token_api():
+        return jsonify({'csrf_token': generate_csrf()})
+
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -39,15 +49,13 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         return get_user_by_id(user_id)
-    
-    # Регистрация Blueprint
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(teacher_bp)
     app.register_blueprint(student_bp)
     app.register_blueprint(users_api)
-    
-    # Регистрация остальных API Blueprint
+
     app.register_blueprint(disciplines_api)
     app.register_blueprint(groups_api)
     app.register_blueprint(grades_api)

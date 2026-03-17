@@ -29,8 +29,8 @@ def test_get_db_connection_failure(monkeypatch):
 
 def test_user_cache_behaviour():
     models.users.clear()
-    user = models.User("user1", role_id=1, student_id=42)
+    user = models.User(1, role_id=1, student_id=42)
 
-    assert models.get_user_by_id("user1") is user
-    assert user.get_id() == "user1"
+    assert models.get_user_by_id("1") is user
+    assert user.get_id() == "1"
 

@@ -9,6 +9,7 @@
         const icon = document.createElement('i');
         icon.id = 'theme-icon';
         icon.className = savedTheme === 'light' ? 'bi bi-moon fs-4' : 'bi bi-sun fs-4';
+        icon.style.color = 'white';
         icon.setAttribute('aria-label', savedTheme === 'light' ? 'Тёмная тема' : 'Светлая тема');
         toggleBtn.appendChild(icon);
 
@@ -20,6 +21,7 @@
             localStorage.setItem('theme', newTheme);
 
             icon.className = newTheme === 'light' ? 'bi bi-moon fs-4' : 'bi bi-sun fs-4';
+            icon.style.color = 'white';
             icon.setAttribute('aria-label', newTheme === 'light' ? 'Тёмная тема' : 'Светлая тема');
         });
     });

@@ -1,9 +1,13 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 from models import get_db_connection
+from api_access import require_roles
 
 expulsion_api = Blueprint('expulsion_api', __name__)
 
 @expulsion_api.route('/api/expulsion')
+@login_required
+@require_roles(1, 2, 3)
 def get_expulsion_list():
     try:
         query = """
@@ -34,6 +38,8 @@ def get_expulsion_list():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @expulsion_api.route('/api/expulsion', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def expel_students():
     try:
         data = request.json

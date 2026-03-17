@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         fetch('/api/expulsion', {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: window.withCsrfHeader({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ student_ids: selectedIds })
         })
         .then(response => {

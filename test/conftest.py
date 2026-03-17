@@ -7,6 +7,8 @@ import pytest
 
 from app_new import create_app
 
+from flask.testing import FlaskClient
+
 
 @dataclass
 class QueryStep:
@@ -90,7 +92,22 @@ def app():
 
 @pytest.fixture
 def client(app):
-    return app.test_client()
+    class CsrfClient(FlaskClient):
+        csrf_token: str | None = None
+
+        def open(self, *args, **kwargs):
+            method = (kwargs.get("method") or "GET").upper()
+            headers = dict(kwargs.get("headers") or {})
+            if method in {"POST", "PUT", "PATCH", "DELETE"} and self.csrf_token and "X-CSRFToken" not in headers:
+                headers["X-CSRFToken"] = self.csrf_token
+            kwargs["headers"] = headers
+            return super().open(*args, **kwargs)
+
+    app.test_client_class = CsrfClient
+    client = app.test_client()
+    resp = client.get("/api/csrf")
+    client.csrf_token = (resp.get_json() or {}).get("csrf_token")
+    return client
 
 
 @pytest.fixture

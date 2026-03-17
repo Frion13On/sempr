@@ -107,12 +107,12 @@ def test_update_student_password_success(client, mock_db):
 
     response = client.put(
         "/api/account/student/password",
-        json={"user_id": 2001, "new_password": "NewPass123"},
+        json={"user_id": 2001, "new_password": "NewPass123!"},
     )
 
     assert response.status_code == HTTPStatus.OK
     assert connection.committed is True
-    assert connection._cursor.executed[0][0].startswith("UPDATE студенты SET пароль")
+    assert "UPDATE авторизация SET пароль" in connection._cursor.executed[0][0]
 
 
 def test_update_student_password_missing_fields(client):
@@ -130,12 +130,12 @@ def test_update_teacher_password_success(client, mock_db):
 
     response = client.put(
         "/api/account/teacher/password",
-        json={"user_id": 501, "new_password": "TeacherPass"},
+        json={"user_id": 501, "new_password": "TeacherPass!"},
     )
 
     assert response.status_code == HTTPStatus.OK
     assert connection.committed is True
-    assert connection._cursor.executed[0][0].startswith("UPDATE преподаватели SET пароль")
+    assert "UPDATE авторизация SET пароль" in connection._cursor.executed[0][0]
 
 
 def test_update_teacher_password_missing_fields(client):

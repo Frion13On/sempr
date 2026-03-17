@@ -1,9 +1,13 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 from models import get_db_connection
+from api_access import require_roles
 
 disciplines_api = Blueprint('disciplines_api', __name__)
 
 @disciplines_api.route('/api/disciplines')
+@login_required
+@require_roles(1, 2, 3)
 def get_disciplines():
     try:
         search = request.args.get('search', '')
@@ -34,6 +38,8 @@ def get_disciplines():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @disciplines_api.route('/api/disciplines', methods=['POST'])
+@login_required
+@require_roles(1)
 def add_discipline():
     try:
         data = request.json
@@ -53,6 +59,8 @@ def add_discipline():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @disciplines_api.route('/api/disciplines/<int:id>', methods=['PUT'])
+@login_required
+@require_roles(1)
 def update_discipline(id):
     try:
         data = request.json
@@ -72,6 +80,8 @@ def update_discipline(id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @disciplines_api.route('/api/disciplines/<int:id>', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def delete_discipline(id):
     try:
         query = "DELETE FROM дисциплина WHERE id_дисц = %s"
@@ -87,6 +97,8 @@ def delete_discipline(id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @disciplines_api.route('/api/discipline-assignments')
+@login_required
+@require_roles(1)
 def get_discipline_assignments():
     try:
         search = request.args.get('search', '')
@@ -121,6 +133,8 @@ def get_discipline_assignments():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @disciplines_api.route('/api/discipline-assignments', methods=['POST'])
+@login_required
+@require_roles(1)
 def assign_discipline():
     try:
         data = request.json
@@ -152,6 +166,8 @@ def assign_discipline():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @disciplines_api.route('/api/discipline-assignments', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def remove_assignment():
     try:
         data = request.json
@@ -175,6 +191,8 @@ def remove_assignment():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @disciplines_api.route('/api/teachers')
+@login_required
+@require_roles(1)
 def get_teachers():
     try:
         query = "SELECT фио_преп FROM преподаватели ORDER BY фио_преп"

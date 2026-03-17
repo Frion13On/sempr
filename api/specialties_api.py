@@ -1,9 +1,13 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 from models import get_db_connection
+from api_access import require_roles
 
 specialties_api = Blueprint('specialties_api', __name__)
 
 @specialties_api.route('/api/specialties')
+@login_required
+@require_roles(1, 2, 3)
 def get_specialties():
     try:
         search = request.args.get('search', '')
@@ -31,6 +35,8 @@ def get_specialties():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @specialties_api.route('/api/specialty-assignments')
+@login_required
+@require_roles(1)
 def get_specialty_assignments():
     try:
         search = request.args.get('search', '')
@@ -62,6 +68,8 @@ def get_specialty_assignments():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @specialties_api.route('/api/specialties', methods=['POST'])
+@login_required
+@require_roles(1)
 def add_specialty():
     try:
         data = request.json
@@ -88,6 +96,8 @@ def add_specialty():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @specialties_api.route('/api/specialties/<specialty_id>', methods=['PUT'])
+@login_required
+@require_roles(1)
 def update_specialty(specialty_id):
     try:
         data = request.json
@@ -113,6 +123,8 @@ def update_specialty(specialty_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @specialties_api.route('/api/specialties/<specialty_id>', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def delete_specialty(specialty_id):
     try:
         with get_db_connection() as conn:
@@ -125,6 +137,8 @@ def delete_specialty(specialty_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @specialties_api.route('/api/specialty-assignments', methods=['POST'])
+@login_required
+@require_roles(1)
 def assign_discipline_to_specialty():
     try:
         data = request.json
@@ -151,6 +165,8 @@ def assign_discipline_to_specialty():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @specialties_api.route('/api/specialty-assignments', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def remove_specialty_assignment():
     try:
         data = request.json

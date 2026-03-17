@@ -1,5 +1,6 @@
 (() => {
   const sel = id => document.getElementById(id);
+  const PASSWORD_MASK = '********';
   const entitySelector = sel('entitySelector');
   const searchInput = sel('searchInput');
   const thead = sel('thead_row');
@@ -20,9 +21,9 @@
   };
 
   const headersByEntity = {
-    users_students: ['ID', 'ФИО', 'Логин', 'Пароль', 'Пол', 'Дата рождения', 'Телефон', 'Почта', 'Группа'],
-    users_teachers: ['ID', 'ФИО', 'Логин', 'Пароль', 'Пол', 'Дата рождения', 'Телефон', 'Почта', 'Должность', 'Кафедра'],
-    users_admins: ['ID', 'ФИО', 'Логин', 'Пароль'],
+    users_students: ['ID', 'ФИО', 'Логин', 'Пол', 'Дата рождения', 'Телефон', 'Почта', 'Группа'],
+    users_teachers: ['ID', 'ФИО', 'Логин', 'Пол', 'Дата рождения', 'Телефон', 'Почта', 'Должность', 'Кафедра'],
+    users_admins: ['ID', 'ФИО', 'Логин'],
     disciplines: ['ID', 'Название', 'Количество занятий'],
     groups: ['Название группы', 'Специальность', 'Курс', 'Куратор'],
     specialties: ['ID', 'Название специальности', 'Уровень образования', 'Кафедра'],
@@ -33,7 +34,6 @@
     faculties: ['Название факультета', 'Декан', 'Должность', 'Почта', 'Телефон']
   };
 
-  // Конфигурация API и генераторов по сущностям
   const apiMap = {
     disciplines: '/api/disciplines',
     groups: '/api/groups',
@@ -46,9 +46,9 @@
   };
 
   const rowFields = {
-    users_students: ['id_студ', 'фио_студ', 'логин', 'пароль', 'пол', 'дата_рождения', 'телефон', 'почта', 'название_группы'],
-    users_teachers: ['id_преп', 'фио_преп', 'логин', 'пароль', 'пол', 'дата_рождения', 'телефон', 'почта', 'должность', 'кафедра'],
-    users_admins: ['код_адм', 'фио_адм', 'логин', 'пароль'],
+    users_students: ['id_студ', 'фио_студ', 'логин', 'пол', 'дата_рождения', 'телефон', 'почта', 'название_группы'],
+    users_teachers: ['id_преп', 'фио_преп', 'логин', 'пол', 'дата_рождения', 'телефон', 'почта', 'должность', 'кафедра'],
+    users_admins: ['код_адм', 'фио_адм', 'логин'],
     disciplines: ['id_дисц', 'название', 'количество_занятий'],
     groups: ['название_группы','Специальность','курс','Куратор'],
     specialties: ['id_спец','название_спец','уровень_образования','кафедра'],
@@ -131,7 +131,6 @@ function renderRow(entityKey, row) {
     })
   };
 
-  // Состояние
   let currentEntity = 'users_admins';
   let selectedId = null;
   let currentDataAbortController = null;
@@ -140,7 +139,6 @@ function renderRow(entityKey, row) {
   let lastDataRequestId = 0;
   const sortStateByEntity = {};
 
-  // Инициализация
   function init() {
     entitySelector.addEventListener('change', onEntityChange);
     searchInput.addEventListener('input', onSearchChange);
@@ -189,8 +187,6 @@ function renderRow(entityKey, row) {
     });
   }
 
-
-  // Таблица и сортировка
   function renderHeaders(entity) {
     thead.innerHTML = '';
     const headers = headersByEntity[entity] || [];
@@ -299,7 +295,6 @@ function renderRow(entityKey, row) {
     reattachRows(tbody, sorted);
   }
 
-  // Рендер строк
   function createTableRow(row, entity) {
     return renderRow(entity, row);
   }
@@ -374,36 +369,35 @@ function renderRow(entityKey, row) {
     if (currentEntity === 'users_students') {
       sel('s_fio').value = cells[1].textContent;
       sel('s_login').value = cells[2].textContent;
-      sel('s_password').value = cells[3].textContent;
-      const genderValue = cells[4].textContent;
+      sel('s_password').value = PASSWORD_MASK;
+      const genderValue = cells[3].textContent;
       if (genderValue) {
         document.querySelector(`input[name="s_gender"][value="${genderValue}"]`).checked = true;
       }
-      sel('s_birth').value = cells[5].textContent;
-      sel('s_phone').value = cells[6].textContent;
-      sel('s_email').value = cells[7].textContent;
-      sel('s_group').value = cells[8].textContent;
+      sel('s_birth').value = cells[4].textContent;
+      sel('s_phone').value = cells[5].textContent;
+      sel('s_email').value = cells[6].textContent;
+      sel('s_group').value = cells[7].textContent;
     } else if (currentEntity === 'users_teachers') {
       sel('t_fio').value = cells[1].textContent;
       sel('t_login').value = cells[2].textContent;
-      sel('t_password').value = cells[3].textContent;
-      const genderValue = cells[4].textContent;
+      sel('t_password').value = PASSWORD_MASK;
+      const genderValue = cells[3].textContent;
       if (genderValue) {
         document.querySelector(`input[name="t_gender"][value="${genderValue}"]`).checked = true;
       }
-      sel('t_birth').value = cells[5].textContent;
-      sel('t_phone').value = cells[6].textContent;
-      sel('t_email').value = cells[7].textContent;
-      sel('t_position').value = cells[8].textContent;
-      sel('t_department').value = cells[9].textContent;
+      sel('t_birth').value = cells[4].textContent;
+      sel('t_phone').value = cells[5].textContent;
+      sel('t_email').value = cells[6].textContent;
+      sel('t_position').value = cells[7].textContent;
+      sel('t_department').value = cells[8].textContent;
     } else if (currentEntity === 'users_admins') {
       sel('a_fio').value = cells[1].textContent;
       sel('a_login').value = cells[2].textContent;
-      sel('a_password').value = cells[3].textContent;
+      sel('a_password').value = PASSWORD_MASK;
     }
   }
 
-  // Автокомплит
   async function loadAutoCompleteData(entity) {
     try {
       if (entity === 'users_teachers') {
@@ -464,7 +458,6 @@ function renderRow(entityKey, row) {
     }
   }
 
-  // Хелперы автокомплита
   async function loadDepartmentsInto(datalistId) {
     const response = await fetch('/api/departments_list');
     if (!response.ok) return;
@@ -521,7 +514,6 @@ function renderRow(entityKey, row) {
     });
   }
 
-  // Поиск
   function onSearchChange() {
     if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
@@ -529,7 +521,6 @@ function renderRow(entityKey, row) {
     }, 300);
   }
 
-  // CRUD
   function onSave() {
     if (requestInFlight) return;
     if (!validateForm()) return;
@@ -589,7 +580,7 @@ function renderRow(entityKey, row) {
     try {
       const resp = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: window.withCsrfHeader({ 'Content-Type': 'application/json' }),
         body: payload ? JSON.stringify(payload) : undefined,
         signal: controller.signal
       });
@@ -681,24 +672,30 @@ function renderRow(entityKey, row) {
     return builder ? builder() : {};
   }
 
-  // Валидация и данные форм
   function getUserFormData() {
+    const stripMaskedPassword = (v) => {
+      const value = (v || '').trim();
+      if (!value || value === PASSWORD_MASK) return undefined;
+      return value;
+    };
+
     if (currentEntity === 'users_students') {
-      return {
+      const payload = {
         фио_студ: sel('s_fio').value,
         логин: sel('s_login').value,
-        пароль: sel('s_password').value,
         пол: document.querySelector('input[name="s_gender"]:checked').value,
         дата_рождения: sel('s_birth').value,
         телефон: sel('s_phone').value,
         почта: sel('s_email').value,
         название_группы: sel('s_group').value
       };
+      const pwd = stripMaskedPassword(sel('s_password').value);
+      if (pwd !== undefined) payload.пароль = pwd;
+      return payload;
     } else if (currentEntity === 'users_teachers') {
-      return {
+      const payload = {
         фио_преп: sel('t_fio').value,
         логин: sel('t_login').value,
-        пароль: sel('t_password').value,
         пол: document.querySelector('input[name="t_gender"]:checked').value,
         дата_рождения: sel('t_birth').value,
         телефон: sel('t_phone').value,
@@ -706,12 +703,17 @@ function renderRow(entityKey, row) {
         должность: sel('t_position').value,
         кафедра: sel('t_department').value
       };
+      const pwd = stripMaskedPassword(sel('t_password').value);
+      if (pwd !== undefined) payload.пароль = pwd;
+      return payload;
     } else if (currentEntity === 'users_admins') {
-      return {
+      const payload = {
         фио_адм: sel('a_fio').value,
         логин: sel('a_login').value,
-        пароль: sel('a_password').value
       };
+      const pwd = stripMaskedPassword(sel('a_password').value);
+      if (pwd !== undefined) payload.пароль = pwd;
+      return payload;
     }
     return {};
   }

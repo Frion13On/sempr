@@ -15,14 +15,14 @@ def test_login_sql_injection_blocked(app, mock_db, monkeypatch):
     )
     monkeypatch.setattr(auth, "flash", lambda *args, **kwargs: None)
 
-    with app.app_context():
+    with app.test_request_context():
         user, role_id = auth.authenticate_user("' OR '1'='1", "' OR '1'='1")
 
     assert user is None
     assert role_id is None
     query, params = connection._cursor.executed[0]
     assert "%s" in query
-    assert params == ("' OR '1'='1", "' OR '1'='1")
+    assert params == ("' OR '1'='1",)
 
 
 def test_add_user_rejects_sql_injection(client):
@@ -33,7 +33,7 @@ def test_add_user_rejects_sql_injection(client):
             "data": {
                 "фио_преп": "Иванов И.И.",
                 "логин": "' OR '1'='1",
-                "пароль": "StrongPass1",
+                "пароль": "StrongPass1!",
             },
         },
     )
@@ -46,21 +46,18 @@ def test_add_user_rejects_sql_injection(client):
 
 def test_authorization_checks(app):
     with app.test_request_context():
-        admin = User("admin01", role_id=1)
-        teacher = User("teacher01", role_id=2)
-        student = User("student01", role_id=3)
+        admin = User(1, role_id=1)
+        teacher = User(2, role_id=2, teacher_id=42)
+        student = User(3, role_id=3, student_id=100)
 
-        # Admin access
         auth.login_user(admin)
         assert auth.check_admin_access() is True
         logout_user()
 
-        # Teacher access denied for student
         auth.login_user(student)
         assert auth.check_teacher_access() is False
         logout_user()
 
-        # Teacher access allowed for teacher
         auth.login_user(teacher)
         assert auth.check_teacher_access() is True
         logout_user()
@@ -71,12 +68,12 @@ def test_logout_invalidates_session(app):
 
     with app.test_client() as client:
         users.clear()
-        users["admin01"] = User("admin01", role_id=1)
+        users[1] = User(1, role_id=1)
         with client.session_transaction() as session:
-            session["_user_id"] = "admin01"
+            session["_user_id"] = "1"
 
         response = client.get("/logout")
 
         assert response.status_code == 302
-        assert "admin01" not in users
+        assert 1 not in users
 

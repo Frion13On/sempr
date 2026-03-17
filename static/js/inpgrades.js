@@ -81,8 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function createGradeTable(numberOfLessons, students) {
-        console.log('Creating table with students:', students); // Debug
-
+        console.log('Creating table with students:', students); 
         const thead = gradesTable.querySelector('thead tr');
         thead.innerHTML = '<th class="student-name">ФИО студента</th>';
 
@@ -101,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tbody.innerHTML = '';
 
         students.forEach(student => {
-            console.log('Processing student:', student); // Debug
+            console.log('Processing student:', student); 
             const tr = document.createElement('tr');
             
             const tdName = document.createElement('td');
@@ -219,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
         fetch('/api/grades/save', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: window.withCsrfHeader({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(payload)
         })
         .then(async response => {

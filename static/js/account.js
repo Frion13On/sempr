@@ -57,12 +57,22 @@ function changePassword() {
         return;
     }
 
+    // Простая клиентская проверка сложности пароля (та же логика, что и на сервере)
+    const complexityRe = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!complexityRe.test(newPassword)) {
+        document.getElementById('errorAlert').textContent =
+            'Пароль должен быть не короче 8 символов и содержать строчные и заглавные буквы, а также специальный символ';
+        document.getElementById('errorAlert').style.display = 'block';
+        return;
+    }
+
     const endpoint = window.userRole === "2" ? '/api/account/teacher/password' : '/api/account/student/password';
     
     fetch(endpoint, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            ...window.withCsrfHeader(),
         },
         body: JSON.stringify({
             user_id: window.userId,

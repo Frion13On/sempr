@@ -1,9 +1,13 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 from models import get_db_connection
+from api_access import require_roles
 
 groups_api = Blueprint('groups_api', __name__)
 
 @groups_api.route('/api/groups', methods=['GET'])
+@login_required
+@require_roles(1, 2, 3)
 def get_groups():
     try:
         search = request.args.get('search', '')
@@ -39,6 +43,8 @@ def get_groups():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @groups_api.route('/api/groups', methods=['POST'])
+@login_required
+@require_roles(1)
 def add_group():
     try:
         data = request.json
@@ -90,6 +96,8 @@ def add_group():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @groups_api.route('/api/groups/<group_name>', methods=['PUT'])
+@login_required
+@require_roles(1)
 def update_group(group_name):
     try:
         data = request.json
@@ -127,6 +135,8 @@ def update_group(group_name):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @groups_api.route('/api/groups/<group_name>', methods=['DELETE'])
+@login_required
+@require_roles(1)
 def delete_group(group_name):
     try:
         with get_db_connection() as conn:
