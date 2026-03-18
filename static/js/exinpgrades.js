@@ -8,6 +8,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     loadDataBtn.addEventListener('click', loadExamGrades);
     saveDataBtn.addEventListener('click', saveExamGrades);
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            console.log('Export button clicked');
+            console.log('XLSX available:', typeof XLSX !== 'undefined');
+            exportToExcel();
+        });
+    } else {
+        console.warn('Export button not found');
+    }
     loadTeacherDisciplines();
     loadGroups();
 
@@ -216,5 +226,38 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideEmptyState() {
         gradesTable.style.display = 'table';
         emptyState.classList.add('d-none');
+    }
+
+    function exportToExcel() {
+        console.log('exportToExcel function started');
+        const discipline = disciplineSelect.value;
+        const group = groupInput.value;
+
+        if (!discipline || !group) {
+            alert('Пожалуйста, заполните поля "Дисциплина" и "Группа"');
+            return;
+        }
+
+        if (!gradesTable.querySelector('tbody').rows || gradesTable.querySelector('tbody').rows.length === 0) {
+            alert('Нет данных для экспорта. Сначала загрузите таблицу оценок.');
+            return;
+        }
+
+        // Extract data using utility function
+        const data = extractTableData(gradesTable, { skipColumns: [] });
+        
+        // Calculate column widths
+        const headers = data[0] || [];
+        const columnWidths = headers.map(h => ({ wch: Math.max(h.length + 2, 15) }));
+        if (columnWidths.length > 1) {
+            columnWidths[1] = { wch: 25 };
+        }
+
+        // Generate filename
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `экзамены_${discipline}_${group}_${date}.xlsx`;
+        
+        // Export using utility function
+        exportTableToExcel(data, filename, 'Экзамены', columnWidths);
     }
 }); 

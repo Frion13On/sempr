@@ -25,6 +25,17 @@ document.addEventListener('DOMContentLoaded', function() {
         reloadBtn.addEventListener('click', loadData);
     }
 
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            console.log('Export button clicked');
+            console.log('XLSX available:', typeof XLSX !== 'undefined');
+            exportToExcel();
+        });
+    } else {
+        console.warn('Export button not found');
+    }
+
     function loadData() {
         fetch('/api/expulsion')
             .then(response => {
@@ -176,5 +187,38 @@ document.addEventListener('DOMContentLoaded', function() {
             sortState.dir
         );
         reattachRows(tbody, sorted);
+    }
+
+    function exportToExcel() {
+        console.log('exportToExcel function started');
+        const expulsionTable = document.getElementById('expulsionTable');
+        const tbody = expulsionTable.querySelector('tbody');
+
+        if (!tbody || tbody.rows.length === 0) {
+            console.error('No data to export');
+            showError('Нет данных для экспорта');
+            return;
+        }
+
+        // Determine which columns to skip (checkbox column for admin)
+        const skipColumns = window.userRole === "1" ? [0] : [];
+
+        // Extract data using utility function
+        const data = extractTableData(expulsionTable, { skipColumns });
+        
+        // Calculate column widths
+        const columnWidths = [
+            { wch: 25 },  // ФИО
+            { wch: 15 },  // Группа
+            { wch: 12 }   // Долги
+        ];
+
+        // Generate filename
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `список_на_отчисление_${date}.xlsx`;
+        
+        console.log('Writing file:', filename);
+        // Export using utility function
+        exportTableToExcel(data, filename, 'На отчисление', columnWidths);
     }
 }); 
