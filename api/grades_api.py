@@ -6,6 +6,50 @@ from api_access import require_roles, require_same_user_id
 
 grades_api = Blueprint('grades_api', __name__)
 
+
+@grades_api.route('/api/group/rating')
+@login_required
+def get_group_rating():
+    try:
+        group = request.args.get('group')
+        discipline = request.args.get('discipline')
+        if not group or not discipline:
+            return jsonify({'success': False, 'error': 'Missing required parameters'}), 400
+
+        query = """
+            SELECT s.фио_студ AS studentName,
+                   AVG(CASE WHEN ej.оценка ~ '^[0-9]+$' THEN CAST(ej.оценка AS REAL) ELSE NULL END) AS avgGrade
+            FROM студенты s
+            LEFT JOIN электронный_журнал ej ON ej.id_студ = s.id_студ
+             AND ej.название_группы = s.название_группы
+             AND ej.id_экзамен IS NULL
+            LEFT JOIN дисциплина d ON ej.id_дисц = d.id_дисц
+            WHERE s.название_группы = %s AND d.название = %s
+            GROUP BY s.фио_студ
+            ORDER BY avgGrade DESC NULLS LAST, s.фио_студ
+        """
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, [group, discipline])
+            rows = cursor.fetchall()
+
+        results = []
+        place = 1
+        for student_name, avg_grade in rows:
+            if avg_grade is None:
+                continue
+            results.append({
+                'place': place,
+                'studentName': student_name,
+                'averageGrade': f"{float(avg_grade):.2f}",
+            })
+            place += 1
+
+        return jsonify({'group': group, 'discipline': discipline, 'rating': results})
+    except Exception as e:
+        print(f"Error in get_group_rating: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @grades_api.route('/api/student/debts')
 @login_required
 @require_roles(3)
@@ -27,7 +71,8 @@ def get_student_debts():
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, [student_id])
-            columns = [column[0] for column in cursor.description]
+            desc = cursor.description or []
+            columns = [column[0] for column in desc]
             results = []
             for row in cursor.fetchall():
                 result = {}
@@ -54,7 +99,7 @@ def get_student_disciplines():
             SELECT DISTINCT d.название 
             FROM электронный_журнал ej 
             INNER JOIN дисциплина d ON ej.id_дисц = d.id_дисц 
-            WHERE ej.id_студ = %s
+            WHERE ej.id_студ = %s AND ej.id_экзамен IS NULL
         """
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -85,7 +130,7 @@ def get_student_grades():
             query = """ 
             SELECT номер_занятия AS LessonNumber, оценка AS Grade 
                 FROM электронный_журнал 
-                WHERE id_дисц = %s AND id_студ = %s 
+                WHERE id_дисц = %s AND id_студ = %s AND id_экзамен IS NULL
             """
             cursor.execute(query, [discipline_id[0], student_id])
             grades = []
@@ -164,38 +209,94 @@ def get_group_grades():
                 group_name = result[0]
         if not group_name:
             return jsonify({'success': False, 'error': 'Group name not provided'}), 400
-        query = """
-            SELECT d.название AS DisciplineName,
-                   AVG(CASE WHEN ej.оценка = 'н/а' THEN 2 WHEN ej.оценка NOT IN ('Н') AND ej.оценка ~ '^[0-9]+$'
-                       THEN CAST(ej.оценка AS REAL) ELSE 2 
-                   END) AS AverageGrade,
-                   SUM(CASE WHEN ej.оценка = 'Н' THEN 1 ELSE 0 END) AS TotalAbsences
-            FROM электронный_журнал ej INNER JOIN дисциплина d ON ej.id_дисц = d.id_дисц INNER JOIN студенты s ON ej.id_студ = s.id_студ
-            WHERE s.название_группы = %s
-            GROUP BY d.название
-        """
+        
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, [group_name])
+            
+            # Получаем всех студентов в группе
+            cursor.execute("SELECT id_студ FROM студенты WHERE название_группы = %s", [group_name])
+            all_students = [row[0] for row in cursor.fetchall()]
+            total_students = len(all_students)
+            
+            # Получаем все дисциплины для этой группы
+            query_disciplines = """
+                SELECT DISTINCT d.id_дисц, d.название
+                FROM дисциплина d
+                INNER JOIN электронный_журнал ej ON ej.id_дисц = d.id_дисц
+                INNER JOIN студенты s ON ej.id_студ = s.id_студ
+                WHERE s.название_группы = %s AND ej.id_экзамен IS NULL
+                ORDER BY d.название
+            """
+            cursor.execute(query_disciplines, [group_name])
+            disciplines = cursor.fetchall()
+            
             grades = []
-            total_absences = 0
-            discipline_count = 0
-            for row in cursor.fetchall():
-                discipline_name = row[0]
-                average_grade = row[1]
-                total_absences_count = row[2]
-                grade_data = {
+            total_absences_all = 0
+            total_entries = 0
+            
+            for discipline_id, discipline_name in disciplines:
+                # Получаем все оценки по этой дисциплине в этой группе
+                query_grades = """
+                    SELECT s.id_студ, ej.оценка
+                    FROM электронный_журнал ej
+                    INNER JOIN студенты s ON ej.id_студ = s.id_студ
+                    WHERE ej.id_дисц = %s AND s.название_группы = %s AND ej.id_экзамен IS NULL
+                """
+                cursor.execute(query_grades, [discipline_id, group_name])
+                grade_data = cursor.fetchall()
+                
+                # Подсчитываем для каждого студента
+                student_grades = {}
+                absence_count = 0
+                
+                for student_id, grade in grade_data:
+                    if student_id not in student_grades:
+                        student_grades[student_id] = []
+                    student_grades[student_id].append(grade)
+                    if grade == 'Н':
+                        absence_count += 1
+                    total_absences_all += 1 if grade == 'Н' else 0
+                    total_entries += 1
+                
+                # Подсчитываем аттестованных студентов (с >= 3 числовыми оценками)
+                attested_count = 0
+                attested_grades = []
+                
+                for student_id in all_students:
+                    if student_id in student_grades:
+                        numeric_grades = [g for g in student_grades[student_id] 
+                                        if g and str(g).strip() and str(g)[0].isdigit()]
+                        if len(numeric_grades) >= 3:
+                            attested_count += 1
+                            attested_grades.extend([float(g) for g in numeric_grades])
+                
+                # Средний балл считаем только для аттестованных
+                if attested_grades:
+                    average_grade = sum(attested_grades) / len(attested_grades)
+                    average_grade_str = f"{average_grade:.2f}"
+                else:
+                    average_grade_str = 'н/а'
+                
+                # % аттестованных студентов по этой дисциплине
+                success_rate = (attested_count / total_students * 100) if total_students > 0 else 0
+                
+                # % пропусков по этой дисциплине
+                absence_rate = (absence_count / len(grade_data) * 100) if len(grade_data) > 0 else 0
+                
+                grade_data_obj = {
                     'DisciplineName': discipline_name,
-                    'AverageGrade': f"{float(average_grade):.2f}" if average_grade else 'н/д'
+                    'AverageGrade': average_grade_str,
+                    'SuccessRate': f"{success_rate:.1f}",
+                    'AbsenceRate': f"{absence_rate:.1f}"
                 }
-                grades.append(grade_data)
-                total_absences += total_absences_count or 0
-                discipline_count += 1
-            average_absences = f"{total_absences / discipline_count:.2f}" if discipline_count > 0 else "0"
+                grades.append(grade_data_obj)
+            
+            # Среднее количество пропусков по всем предметам в %
+            average_absence_rate = (total_absences_all / total_entries * 100) if total_entries > 0 else 0
 
             return jsonify({
                 'grades': grades,
-                'averageAbsences': average_absences,
+                'averageAbsences': f"{average_absence_rate:.1f}",
                 'groupName': group_name
             })
     except Exception as e:
@@ -248,7 +349,7 @@ def get_final_grades():
             FROM электронный_журнал ej
             JOIN студенты s ON ej.id_студ = s.id_студ
             JOIN дисциплина d ON ej.id_дисц = d.id_дисц
-            WHERE d.название = %s AND ej.название_группы = %s
+            WHERE d.название = %s AND ej.название_группы = %s AND ej.id_экзамен IS NULL
             GROUP BY s.фио_студ
         """
         with get_db_connection() as conn:
@@ -288,13 +389,16 @@ def get_grades_table():
                 return jsonify({'success': False, 'error': 'Discipline not found'}), 404
             number_of_lessons = result[0]
             cursor.execute("SELECT id_дисц FROM дисциплина WHERE название = %s", [discipline])
-            discipline_id = cursor.fetchone()[0]
+            discipline_row = cursor.fetchone()
+            if not discipline_row:
+                return jsonify({'success': False, 'error': 'Discipline not found'}), 404
+            discipline_id = discipline_row[0]
             query = """
                 SELECT s.фио_студ, TRIM(CAST(ej.номер_занятия as TEXT)) as Номер_занятия, 
                        ej.оценка, p.фио_преп 
                 FROM студенты s 
                 LEFT JOIN электронный_журнал ej ON s.id_студ = ej.id_студ 
-                    AND ej.id_дисц = %s AND ej.название_группы = %s
+                    AND ej.id_дисц = %s AND ej.название_группы = %s AND ej.id_экзамен IS NULL
                 LEFT JOIN преподаватели p ON ej.id_преп = p.id_преп 
                 WHERE s.название_группы = %s
                 ORDER BY s.фио_студ, ej.номер_занятия
@@ -372,7 +476,8 @@ def save_grades():
                         WHERE id_дисц = %s AND название_группы = %s 
                         AND id_студ = %s AND TRIM(CAST(номер_занятия as TEXT)) = %s
                     """, [discipline_id, data['group'], student_id, lesson_number])
-                    grade_exists = cursor.fetchone()[0] > 0
+                    exists_row = cursor.fetchone()
+                    grade_exists = (exists_row[0] if exists_row else 0) > 0
                     if grade_exists:
                         if grade:
                             if not (grade == 'Н' or (grade.isdigit() and 1 <= int(grade) <= 5)):
@@ -501,7 +606,8 @@ def save_exam_grades():
                     FROM электронный_журнал 
                     WHERE id_студ = %s AND id_экзамен = %s
                 """, [student_id, exam_id])
-                grade_exists = cursor.fetchone()[0] > 0
+                exists_row = cursor.fetchone()
+                grade_exists = (exists_row[0] if exists_row else 0) > 0
                 if grade_exists:
                     if grade:
                         if not (grade == 'Н' or (grade.isdigit() and 1 <= int(grade) <= 5)):

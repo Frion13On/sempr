@@ -61,33 +61,77 @@
             </div>
             {% endif %}
 
-            <div class="card stats-card">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12 stats-item">
-                            <div class="stats-label">Среднее количество пропусков по группе</div>
-                            <h3 class="stats-value" id="averageAbsences">0</h3>
+            <div class="row g-3 align-items-start">
+                <div class="col-lg-8">
+                    <div class="card stats-card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12 stats-item">
+                                    <div class="stats-label">Среднее количество пропусков по группе</div>
+                                    <h3 class="stats-value" id="averageAbsences">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="gradesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Название предмета</th>
+                                            <th>Средний балл</th>
+                                            <th>% успеваемости</th>
+                                            <th>% пропусков</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                                <div class="empty-state d-none" id="emptyState">
+                                    <i class="bi bi-journal-x"></i>
+                                    <p>Нет данных для отображения</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="gradesTable">
-                            <thead>
-                                <tr>
-                                    <th>Название предмета</th>
-                                    <th>Средний балл группы</th>
-                                    <th>% посещаемости</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                        <div class="empty-state d-none" id="emptyState">
-                            <i class="bi bi-journal-x"></i>
-                            <p>Нет данных для отображения</p>
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title mb-0">Рейтинг группы</h5>
+                            </div>
+
+                            <div class="d-flex gap-2 align-items-center mb-3">
+                                <button class="btn btn-primary btn-sm" type="button" id="ratingPrevBtn" title="Предыдущий предмет">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                                <div class="flex-grow-1 text-center">
+                                    <span id="ratingDisciplineBtn">-</span>
+                                </div>
+                                <button class="btn btn-primary btn-sm" type="button" id="ratingNextBtn" title="Следующий предмет">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="ratingTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 72px;">Место</th>
+                                            <th>ФИО</th>
+                                            <th style="width: 92px;">Ср. балл</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                                <div class="empty-state d-none" id="ratingEmptyState">
+                                    <i class="bi bi-bar-chart"></i>
+                                    <p>Нет данных для рейтинга</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
