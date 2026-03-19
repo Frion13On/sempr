@@ -1,45 +1,21 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Академические задолженности</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
-    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-</head>
-<body>
-    <!-- Header Bar -->
-    <div class="header-bar">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="header-logo">
-                    <h1 class="header-title">Академические задолженности</h1>
-                </div>
-                <div>
-                    <button id="theme-toggle" class="btn btn-light" style="border:none; background:none;"></button>
-                    {% if current_user.role_id == 1 %}
-                    {% set back_url = url_for('admin.admin_dashboard') %}
-                    {% elif current_user.role_id == 2 %}
-                        {% set back_url = url_for('teacher.teacher_dashboard') %}
-                    {% else %}
-                        {% set back_url = url_for('student.student_dashboard') %}
-                    {% endif %}
-                    
-                    <a href="{{ back_url }}" class="btn btn-outline-light nav-btn me-2">
-                        <i class="bi bi-arrow-left"></i> Назад
-                    </a>
-                    
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light nav-btn">
-                        <i class="bi bi-box-arrow-right"></i> Выход
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+{% extends "base.html" %}
+{% from "partials/layout_macros.html" import header_bar %}
 
+{% block title %}Академические задолженности{% endblock %}
+{% block body_class %}{% endblock %}
+
+{% block header %}
+    {% if current_user.role_id == 1 %}
+    {% set back_url = url_for('admin.admin_dashboard') %}
+    {% elif current_user.role_id == 2 %}
+        {% set back_url = url_for('teacher.teacher_dashboard') %}
+    {% else %}
+        {% set back_url = url_for('student.student_dashboard') %}
+    {% endif %}
+    {{ header_bar('Академические задолженности', show_theme=True, show_back=True, back_url=back_url, show_logout=True) }}
+{% endblock %}
+
+{% block content %}
     <div class="main-content">
         <div class="container-fluid">
             <!-- Debts Table -->
@@ -66,12 +42,14 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block scripts %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         window.userRole = "{{ current_user.role_id }}";
         window.studentId = "{{ current_user.student_id }}";
     </script>
+    <script src="{{ url_for('static', filename='js/api_helpers.js') }}"></script>
     <script src="{{ url_for('static', filename='js/debts.js') }}"></script>
-</body>
-</html> 
+{% endblock %}

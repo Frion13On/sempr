@@ -12,12 +12,10 @@ function setupEventListeners() {
 }
 
 function loadTeacherDisciplines() {
-    fetch(`/api/teacher/disciplines?teacher_id=${window.userId}`)
-        .then(response => response.json())
+    apiGetJson(`/api/teacher/disciplines?teacher_id=${window.userId}`)
         .then(data => {
             const select = document.getElementById('disciplineSelect');
             select.innerHTML = '<option value="">Выберите дисциплину</option>';
-            
             data.forEach(discipline => {
                 const option = document.createElement('option');
                 option.value = discipline;
@@ -27,17 +25,15 @@ function loadTeacherDisciplines() {
         })
         .catch(error => {
             console.error('Error loading disciplines:', error);
-            alert('Ошибка при загрузке дисциплин');
+            notifyError('Ошибка при загрузке дисциплин');
         });
 }
 
 function loadGroups() {
-    fetch('/api/groups')
-        .then(response => response.json())
+    apiGetJson('/api/groups')
         .then(data => {
             const datalist = document.getElementById('groupsList');
             datalist.innerHTML = '';
-            
             data.forEach(group => {
                 const option = document.createElement('option');
                 option.value = group.название_группы;
@@ -46,7 +42,7 @@ function loadGroups() {
         })
         .catch(error => {
             console.error('Error loading groups:', error);
-            alert('Ошибка при загрузке групп');
+            notifyError('Ошибка при загрузке групп');
         });
 }
 
@@ -59,43 +55,42 @@ function loadFinalGrades() {
         return;
     }
 
-    fetch(`/api/final/grades?discipline=${encodeURIComponent(discipline)}&group=${encodeURIComponent(group)}`)
-        .then(response => response.json())
+    apiGetJson(`/api/final/grades?discipline=${encodeURIComponent(discipline)}&group=${encodeURIComponent(group)}`)
         .then(data => {
             const tableBody = document.querySelector('#gradesTable tbody');
             const emptyState = document.getElementById('emptyState');
-
             tableBody.innerHTML = '';
-            
+
             if (data.length === 0) {
                 document.getElementById('gradesTable').classList.add('d-none');
                 emptyState.classList.remove('d-none');
-            } else {
-                document.getElementById('gradesTable').classList.remove('d-none');
-                emptyState.classList.add('d-none');
-                
-                data.forEach(student => {
-                    const row = document.createElement('tr');
-                    const gradeNum = parseFloat(student.finalGrade);
-                    if (student.finalGrade === 'н/а' || (!Number.isNaN(gradeNum) && gradeNum < 3)) {
-                        row.classList.add('low-grade');
-                    }
-
-                    const nameTd = document.createElement('td');
-                    nameTd.textContent = student.studentName;
-                    const gradeTd = document.createElement('td');
-                    gradeTd.textContent = student.finalGrade;
-                    applyGradeColorClass(gradeTd, student.finalGrade);
-
-                    row.appendChild(nameTd);
-                    row.appendChild(gradeTd);
-                    tableBody.appendChild(row);
-                });
+                return;
             }
+
+            document.getElementById('gradesTable').classList.remove('d-none');
+            emptyState.classList.add('d-none');
+
+            data.forEach(student => {
+                const row = document.createElement('tr');
+                const gradeNum = parseFloat(student.finalGrade);
+                if (student.finalGrade === 'н/а' || (!Number.isNaN(gradeNum) && gradeNum < 3)) {
+                    row.classList.add('low-grade');
+                }
+
+                const nameTd = document.createElement('td');
+                nameTd.textContent = student.studentName;
+                const gradeTd = document.createElement('td');
+                gradeTd.textContent = student.finalGrade;
+                applyGradeColorClass(gradeTd, student.finalGrade);
+
+                row.appendChild(nameTd);
+                row.appendChild(gradeTd);
+                tableBody.appendChild(row);
+            });
         })
         .catch(error => {
             console.error('Error loading final grades:', error);
-            alert('Ошибка при загрузке итоговых оценок');
+            notifyError('Ошибка при загрузке итоговых оценок');
         });
 } 
 

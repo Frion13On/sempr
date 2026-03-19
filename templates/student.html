@@ -1,32 +1,14 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель студента</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
-    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-</head>
-<body class="student-layout">
-    <div class="header-bar">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="header-logo">
-                    <h1 class="header-title"> Панель студента</h1>
-                </div>
-                <div>
-                    <button id="theme-toggle" class="btn btn-light" style="border:none; background:none;"></button>
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light nav-btn">
-                        <i class="bi bi-box-arrow-right"></i> Выход
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+{% extends "base.html" %}
+{% from "partials/layout_macros.html" import header_bar %}
 
+{% block title %}Панель студента{% endblock %}
+{% block body_class %}student-layout{% endblock %}
+
+{% block header %}
+    {{ header_bar(' Панель студента', show_theme=True, show_back=False, show_logout=True) }}
+{% endblock %}
+
+{% block content %}
     <div class="main-content container my-4">
         <div class="cards-row">
             <div class="col">
@@ -80,8 +62,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block scripts %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/card-navig.js') }}"></script>
-</body>
-</html>
+{% endblock %}

@@ -28,12 +28,11 @@ function setupEventListeners() {
 }
 
 function loadTeacherGroups() {
-    fetch(`/api/teacher/groups?teacher_id=${window.userId}`)
-        .then(response => response.json())
+    apiGetJson(`/api/teacher/groups?teacher_id=${window.userId}`)
         .then(data => {
             const select = document.getElementById('groupSelect');
             select.innerHTML = '<option value="">Выберите группу</option>';
-            
+
             data.forEach(group => {
                 const option = document.createElement('option');
                 option.value = group;
@@ -48,7 +47,7 @@ function loadTeacherGroups() {
         })
         .catch(error => {
             console.error('Error loading groups:', error);
-            alert('Ошибка при загрузке групп');
+            notifyError('Ошибка при загрузке групп');
         });
 }
 
@@ -57,8 +56,7 @@ function loadGroupGrades(groupName = null) {
         ? `/api/group/grades?group=${encodeURIComponent(groupName)}`
         : `/api/group/grades?student_id=${window.userId}`;
 
-    fetch(url)
-        .then(response => response.json())
+    apiGetJson(url)
         .then(data => {
             const tableBody = document.querySelector('#gradesTable tbody');
             const emptyState = document.getElementById('emptyState');
@@ -123,7 +121,7 @@ function loadGroupGrades(groupName = null) {
         })
         .catch(error => {
             console.error('Error loading grades:', error);
-            alert('Ошибка при загрузке данных');
+            notifyError('Ошибка при загрузке данных');
         });
 }
 
@@ -168,8 +166,7 @@ function loadRatingForCurrent() {
         renderRatingTable([]);
         return;
     }
-    fetch(`/api/group/rating?group=${encodeURIComponent(group)}&discipline=${encodeURIComponent(discipline)}`)
-        .then(r => r.json())
+    apiGetJson(`/api/group/rating?group=${encodeURIComponent(group)}&discipline=${encodeURIComponent(discipline)}`)
         .then(data => {
             const rating = Array.isArray(data.rating) ? data.rating : [];
             renderRatingTable(rating);
@@ -206,9 +203,7 @@ function renderRatingTable(rating) {
 async function computeAttendancePercent(discipline, group) {
     try {
         const url = `/api/grades/table?discipline=${encodeURIComponent(discipline)}&group=${encodeURIComponent(group)}`;
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        const data = await res.json();
+        const data = await apiGetJson(url);
         const students = Array.isArray(data.students) ? data.students : [];
         if (students.length === 0) return null;
 

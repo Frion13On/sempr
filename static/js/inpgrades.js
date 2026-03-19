@@ -19,44 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('Export button not found');
     }
 
-    loadTeacherDisciplines();
-    loadGroups();
-
-    function loadTeacherDisciplines() {
-        fetch(`/api/teacher/disciplines?teacher_id=${window.userId}`)
-            .then(response => response.json())
-            .then(disciplines => {
-                disciplineSelect.innerHTML = '<option value="">Выберите дисциплину</option>';
-                disciplines.forEach(discipline => {
-                    const option = document.createElement('option');
-                    option.value = discipline;
-                    option.textContent = discipline;
-                    disciplineSelect.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error('Error loading disciplines:', error);
-                showError('Ошибка при загрузке дисциплин');
-            });
-    }
-
-    function loadGroups() {
-        fetch('/api/groups')
-            .then(response => response.json())
-            .then(data => {
-                const datalist = document.getElementById('groupsList');
-                datalist.innerHTML = '';
-                data.forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group.название_группы;
-                    datalist.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error('Error loading групп:', error);
-                showError('Ошибка при загрузке групп');
-            });
-    }
+    loadTeacherDisciplinesIntoSelect(disciplineSelect, window.userId);
+    loadGroupsIntoDatalist(document.getElementById('groupsList'));
 
     function loadGradeTable() {
         const discipline = disciplineSelect.value;
@@ -77,11 +41,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 console.log('Received data:', data); // Debug
                 if (!data.numberOfLessons || !data.students || data.students.length === 0) {
-                    showEmptyState();
+                    showEmptyStateForTable(gradesTable, emptyState);
                     return;
                 }
 
-                hideEmptyState();
+                hideEmptyStateForTable(gradesTable, emptyState);
                 createGradeTable(data.numberOfLessons, data.students);
             })
             .catch(error => {
@@ -140,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 input.addEventListener('input', (e) => {
                     validateGradeInput(e);
-                    applyGradeColorForInput(e.target);
+                    applyGradeColorForInputElement(e.target);
                 });
                 td.appendChild(input);
                 tr.appendChild(td);
@@ -154,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tbody.appendChild(tr);
         });
 
-        tbody.querySelectorAll('.grade-input').forEach(applyGradeColorForInput);
+        tbody.querySelectorAll('.grade-input').forEach(applyGradeColorForInputElement);
     }
 
     function calculateAbsences(grades) {
@@ -166,12 +130,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const normalized = normalizeGradeValue(input.value);
         input.value = normalized;
         updateAbsences(input);
-    }
-
-    function applyGradeColorForInput(input) {
-        const td = input.closest('td');
-        if (!td) return;
-        applyGradeClass(td, input.value);
     }
 
     function updateAbsences(input) {
@@ -253,16 +211,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
     }
     
-    function showEmptyState() {
-        gradesTable.style.display = 'none';
-        emptyState.classList.remove('d-none');
-    }
-
-    function hideEmptyState() {
-        gradesTable.style.display = 'table';
-        emptyState.classList.add('d-none');
-    }
-
     function exportToExcel() {
         console.log('exportToExcel function started');
         const discipline = disciplineSelect.value;

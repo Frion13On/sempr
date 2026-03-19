@@ -18,44 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.warn('Export button not found');
     }
-    loadTeacherDisciplines();
-    loadGroups();
-
-    function loadTeacherDisciplines() {
-        fetch(`/api/teacher/disciplines?teacher_id=${window.userId}`)
-            .then(response => response.json())
-            .then(disciplines => {
-                disciplineSelect.innerHTML = '<option value="">Выберите дисциплину</option>';
-                disciplines.forEach(discipline => {
-                    const option = document.createElement('option');
-                    option.value = discipline;
-                    option.textContent = discipline;
-                    disciplineSelect.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error('Error loading disciplines:', error);
-                showError('Ошибка при загрузке дисциплин');
-            });
-    }
-
-    function loadGroups() {
-        fetch('/api/groups')
-            .then(response => response.json())
-            .then(data => {
-                const datalist = document.getElementById('groupsList');
-                datalist.innerHTML = '';
-                data.forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group.название_группы;
-                    datalist.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error('Error loading groups:', error);
-                showError('Ошибка при загрузке групп');
-            });
-    }
+    loadTeacherDisciplinesIntoSelect(disciplineSelect, window.userId);
+    loadGroupsIntoDatalist(document.getElementById('groupsList'));
 
     function loadExamGrades() {
         const discipline = disciplineSelect.value;
@@ -76,11 +40,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 console.log('Received data:', data);
                 if (!data.students || data.students.length === 0) {
-                    showEmptyState();
+                    showEmptyStateForTable(gradesTable, emptyState);
                     return;
                 }
 
-                hideEmptyState();
+                hideEmptyStateForTable(gradesTable, emptyState);
                 createGradeTable(data.students);
             })
             .catch(error => {
@@ -118,26 +82,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             input.addEventListener('input', (e) => {
                 validateGradeInput(e);
-                applyGradeColorForInput(e.target);
+                applyGradeColorForInputElement(e.target);
             });
             tdGrade.appendChild(input);
             tr.appendChild(tdGrade);
 
             tbody.appendChild(tr);
         });
-        tbody.querySelectorAll('.grade-input').forEach(applyGradeColorForInput);
+        tbody.querySelectorAll('.grade-input').forEach(applyGradeColorForInputElement);
     }
 
     function validateGradeInput(event) {
         const input = event.target;
         const normalized = normalizeGradeValue(input.value);
         input.value = normalized;
-    }
-
-    function applyGradeColorForInput(input) {
-        const td = input.closest('td');
-        if (!td) return;
-        applyGradeClass(td, input.value);
     }
 
     function saveExamGrades() {
@@ -216,16 +174,6 @@ document.addEventListener('DOMContentLoaded', function() {
             saveDataBtn.disabled = false;
             saveDataBtn.textContent = 'Сохранить оценки';
         });
-    }
-
-    function showEmptyState() {
-        gradesTable.style.display = 'none';
-        emptyState.classList.remove('d-none');
-    }
-
-    function hideEmptyState() {
-        gradesTable.style.display = 'table';
-        emptyState.classList.add('d-none');
     }
 
     function exportToExcel() {

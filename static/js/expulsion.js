@@ -37,11 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadData() {
-        fetch('/api/expulsion')
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return response.json();
-            })
+        apiGetJson('/api/expulsion')
             .then(data => {
                 expulsionTable.innerHTML = '';
                 data.forEach(student => {
@@ -106,24 +102,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!confirm(`Отчислить выбранных студентов (${selectedIds.length})?`)) return;
 
-        fetch('/api/expulsion', {
-            method: 'DELETE',
-            headers: window.withCsrfHeader({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify({ student_ids: selectedIds })
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return response.json();
-        })
-        .then(result => {
-            if (result.success) {
-                showInfo('Студенты отчислены');
-                loadData();
-            } else {
-                throw new Error(result.error || 'Ошибка при отчислении');
-            }
-        })
-        .catch(error => showError('Ошибка при отчислении: ' + error.message));
+        apiRequestJson('/api/expulsion', 'DELETE', { student_ids: selectedIds })
+            .then(result => {
+                if (result.success) {
+                    showInfo('Студенты отчислены');
+                    loadData();
+                } else {
+                    throw new Error(result.error || 'Ошибка при отчислении');
+                }
+            })
+            .catch(error => showError('Ошибка при отчислении: ' + error.message));
     }
 
     function showInfo(message) {

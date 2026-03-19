@@ -104,13 +104,14 @@ def test_get_group_grades(client, mock_db):
         grades_api,
         [
             QueryStep(
-                fetchall=[
-                    (
-                        "Математика",
-                        4.5,
-                        3,
-                    )
-                ]
+
+                fetchall=[(1,)],
+            ),
+            QueryStep(
+                fetchall=[(10, "Математика")],
+            ),
+            QueryStep(
+                fetchall=[(1, "4.5"), (1, "4.5"), (1, "4.5")],
             )
         ],
     )
