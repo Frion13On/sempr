@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error loading disciplines:', error);
-                alert('Ошибка при загрузке дисциплин');
+                showError('Ошибка при загрузке дисциплин');
             });
     }
 
@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             })
             .catch(error => {
-                console.error('Error loading groups:', error);
-                alert('Ошибка при загрузке групп');
+                console.error('Error loading групп:', error);
+                showError('Ошибка при загрузке групп');
             });
     }
 
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const group = groupInput.value;
 
         if (!discipline || !group) {
-            alert('Пожалуйста, заполните поля "Дисциплина" и "Группа"');
+            showError('Пожалуйста, заполните поля "Дисциплина" и "Группа"');
             return;
         }
 
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error loading grade table:', error);
-                alert('Ошибка при загрузке данных: ' + error.message);
+                showError('Ошибка при загрузке данных: ' + error.message);
             });
     }
 
@@ -187,18 +187,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const group = groupInput.value;
     
         if (!discipline || !group) {
-            alert('Пожалуйста, заполните поля "Дисциплина" и "Группа"');
+            showError('Пожалуйста, заполните поля "Дисциплина" и "Группа"');
             return;
         }
     
         if (!window.userId) {
-            alert('Ошибка: ID пользователя не найден. Пожалуйста, перезагрузите страницу.');
+            showError('Ошибка: ID пользователя не найден. Пожалуйста, перезагрузите страницу.');
             return;
         }
     
         const rows = gradesTable.querySelectorAll('tbody tr');
         if (rows.length === 0) {
-            alert('Нет данных для сохранения. Сначала загрузите таблицу оценок.');
+            showError('Нет данных для сохранения. Сначала загрузите таблицу оценок.');
             return;
         }
     
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const data = JSON.parse(text);
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
-                alert('Оценки успешно сохранены');
+                showMessage('Оценки успешно сохранены');
                 return data;
             } catch(e) {
                 throw new Error(`Server returned non-JSON: ${text}`);
@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(err => {
             console.error('Error saving grades:', err);
-            alert('Ошибка при сохранении оценок: ' + err.message);
+            showError('Ошибка при сохранении оценок: ' + err.message);
         })
         .finally(() => {
             saveDataBtn.disabled = false;
@@ -269,12 +269,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const group = groupInput.value;
 
         if (!discipline || !group) {
-            alert('Пожалуйста, заполните поля "Дисциплина" и "Группа"');
+            showError('Пожалуйста, заполните поля "Дисциплина" и "Группа"');
             return;
         }
 
         if (!gradesTable.querySelector('tbody').rows || gradesTable.querySelector('tbody').rows.length === 0) {
-            alert('Нет данных для экспорта. Сначала загрузите таблицу оценок.');
+            showError('Нет данных для экспорта. Сначала загрузите таблицу оценок.');
             return;
         }
 

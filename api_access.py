@@ -38,10 +38,6 @@ def require_same_user_id(
     user_attr: str,
     sources: Iterable[str] = ("args", "json"),
 ) -> Callable[[F], F]:
-    """
-    Enforces that request param (from query args / json) matches current_user.<user_attr>.
-    If param is missing, does nothing (caller may infer from current_user).
-    """
 
     def decorator(fn: F) -> F:
         @wraps(fn)

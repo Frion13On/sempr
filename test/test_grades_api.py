@@ -51,7 +51,7 @@ def test_get_student_grades_success(client, mock_db):
     mock_db(
         grades_api,
         [
-            QueryStep(fetchone=(101,)),  # discipline id lookup
+            QueryStep(fetchone=(101,)), 
             QueryStep(
                 fetchall=[
                     (1, "5"),
@@ -171,8 +171,8 @@ def test_get_grades_table(client, mock_db):
     mock_db(
         grades_api,
         [
-            QueryStep(fetchone=(3,)),  # количество занятий
-            QueryStep(fetchone=(101,)),  # id дисциплины
+            QueryStep(fetchone=(3,)), 
+            QueryStep(fetchone=(101,)),
             QueryStep(
                 fetchall=[
                     ("Иванов Иван Иваныч", " 1 ", "5", "Петров Петр Петрович"),
