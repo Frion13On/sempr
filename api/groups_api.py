@@ -117,11 +117,7 @@ def update_group(group_name):
             if not curator_id:
                 return jsonify({'success': False, 'error': 'Куратор не найден'}), 404
 
-            cursor.execute("""
-                UPDATE группы 
-                SET специальность = %s, курс = %s, куратор = %s 
-                WHERE название_группы = %s
-            """, [
+            cursor.execute("UPDATE группы SET специальность = %s, курс = %s, куратор = %s WHERE название_группы = %s", [
                 specialty_id[0],
                 data['Курс'],
                 curator_id[0],

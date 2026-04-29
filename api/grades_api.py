@@ -17,12 +17,9 @@ def get_group_rating():
             return jsonify({'success': False, 'error': 'Missing required parameters'}), 400
 
         query = """
-            SELECT s.фио_студ AS studentName,
-                   AVG(CASE WHEN ej.оценка ~ '^[0-9]+$' THEN CAST(ej.оценка AS REAL) ELSE NULL END) AS avgGrade
+            SELECT s.фио_студ AS studentName, AVG(CASE WHEN ej.оценка ~ '^[0-9]+$' THEN CAST(ej.оценка AS REAL) ELSE NULL END) AS avgGrade
             FROM студенты s
-            LEFT JOIN электронный_журнал ej ON ej.id_студ = s.id_студ
-             AND ej.название_группы = s.название_группы
-             AND ej.id_экзамен IS NULL
+            LEFT JOIN электронный_журнал ej ON ej.id_студ = s.id_студ AND ej.название_группы = s.название_группы AND ej.id_экзамен IS NULL
             LEFT JOIN дисциплина d ON ej.id_дисц = d.id_дисц
             WHERE s.название_группы = %s AND d.название = %s
             GROUP BY s.фио_студ
@@ -60,9 +57,7 @@ def get_student_debts():
         if not student_id:
             return jsonify({'success': False, 'error': 'Student ID not found in session'}), 400
         query = """
-            SELECT d.название AS DisciplineName, 
-                   e.дата_экзамена AS ExamDate,
-                   ej.оценка AS Grade 
+            SELECT d.название AS DisciplineName, e.дата_экзамена AS ExamDate, ej.оценка AS Grade 
             FROM электронный_журнал ej
             INNER JOIN экзамены e ON ej.id_экзамен = e.id_экзамен 
             INNER JOIN дисциплина d ON ej.id_дисц = d.id_дисц
@@ -264,7 +259,11 @@ def _calculate_group_grades(cursor, group_name):
                     g for g in student_grades[s_id]
                     if g and str(g).strip() and str(g)[0].isdigit()
                 ]
-                if len(numeric_grades) >= 3:
+                total_marks = len(student_grades[s_id])
+                absence_marks = sum(1 for g in student_grades[s_id] if g == 'Н')
+                attendance_rate = ((total_marks - absence_marks) / total_marks * 100) if total_marks > 0 else 0
+
+                if len(numeric_grades) >= 3 and attendance_rate >= 50:
                     attested_count += 1
                     attested_grades.extend([float(g) for g in numeric_grades])
 
@@ -348,9 +347,8 @@ def get_final_grades():
             return jsonify({'success': False, 'error': 'Missing required parameters'}), 400
 
         query = """
-            SELECT s.фио_студ AS studentName,
-                   SUM(CASE WHEN ej.оценка = 'Н' THEN 1 ELSE 0 END) AS absences,  COUNT(ej.оценка) AS totalLessons,
-                   AVG(CASE WHEN ej.оценка ~ '^[0-9]+$' THEN CAST(ej.оценка AS REAL) ELSE NULL END) AS avgGrade
+            SELECT s.фио_студ AS studentName, SUM(CASE WHEN ej.оценка = 'Н' THEN 1 ELSE 0 END) AS absences,  COUNT(ej.оценка) AS totalLessons,
+            AVG(CASE WHEN ej.оценка ~ '^[0-9]+$' THEN CAST(ej.оценка AS REAL) ELSE NULL END) AS avgGrade
             FROM электронный_журнал ej
             JOIN студенты s ON ej.id_студ = s.id_студ
             JOIN дисциплина d ON ej.id_дисц = d.id_дисц
@@ -399,11 +397,9 @@ def get_grades_table():
                 return jsonify({'success': False, 'error': 'Discipline not found'}), 404
             discipline_id = discipline_row[0]
             query = """
-                SELECT s.фио_студ, TRIM(CAST(ej.номер_занятия as TEXT)) as Номер_занятия, 
-                       ej.оценка, p.фио_преп 
+                SELECT s.фио_студ, TRIM(CAST(ej.номер_занятия as TEXT)) as Номер_занятия, ej.оценка, p.фио_преп 
                 FROM студенты s 
-                LEFT JOIN электронный_журнал ej ON s.id_студ = ej.id_студ 
-                    AND ej.id_дисц = %s AND ej.название_группы = %s AND ej.id_экзамен IS NULL
+                LEFT JOIN электронный_журнал ej ON s.id_студ = ej.id_студ AND ej.id_дисц = %s AND ej.название_группы = %s AND ej.id_экзамен IS NULL
                 LEFT JOIN преподаватели p ON ej.id_преп = p.id_преп 
                 WHERE s.название_группы = %s
                 ORDER BY s.фио_студ, ej.номер_занятия
@@ -547,8 +543,7 @@ def get_exam_grades_table():
             query = """
                 SELECT s.фио_студ, ej.оценка
                 FROM студенты s 
-                LEFT JOIN электронный_журнал ej ON s.id_студ = ej.id_студ 
-                    AND ej.id_экзамен = %s
+                LEFT JOIN электронный_журнал ej ON s.id_студ = ej.id_студ AND ej.id_экзамен = %s
                 WHERE s.название_группы = %s
                 ORDER BY s.фио_студ
             """
@@ -590,11 +585,7 @@ def save_exam_grades():
             if not discipline_id:
                 return jsonify({'success': False, 'error': 'Discipline not found'}), 404
             discipline_id = discipline_id[0]
-            cursor.execute("""
-                SELECT id_экзамен 
-                FROM экзамены 
-                WHERE id_дисц = %s AND название_группы = %s
-            """, [discipline_id, data['group']])
+            cursor.execute("SELECT id_экзамен FROM экзамены WHERE id_дисц = %s AND название_группы = %s", [discipline_id, data['group']])
             exam_id = cursor.fetchone()
             if not exam_id:
                 return jsonify({'success': False, 'error': 'Exam not found'}), 404
@@ -606,11 +597,7 @@ def save_exam_grades():
                     continue
                 student_id = student_id[0]
                 grade = grade_data['grade'].strip()
-                cursor.execute("""
-                    SELECT COUNT(*) 
-                    FROM электронный_журнал 
-                    WHERE id_студ = %s AND id_экзамен = %s
-                """, [student_id, exam_id])
+                cursor.execute("SELECT COUNT(*) FROM электронный_журнал WHERE id_студ = %s AND id_экзамен = %s", [student_id, exam_id])
                 exists_row = cursor.fetchone()
                 grade_exists = (exists_row[0] if exists_row else 0) > 0
                 if grade_exists:
@@ -620,16 +607,9 @@ def save_exam_grades():
                                 'success': False,
                                 'error': f'Invalid grade "{grade}" for student {grade_data["studentName"]}'
                             }), 400
-                        cursor.execute("""
-                            UPDATE электронный_журнал 
-                            SET оценка = %s, id_преп = %s 
-                            WHERE id_студ = %s AND id_экзамен = %s
-                        """, [grade, data['teacherId'], student_id, exam_id])
+                        cursor.execute("UPDATE электронный_журнал SET оценка = %s, id_преп = %s WHERE id_студ = %s AND id_экзамен = %s", [grade, data['teacherId'], student_id, exam_id])
                     else:
-                        cursor.execute("""
-                            DELETE FROM электронный_журнал 
-                            WHERE id_студ = %s AND id_экзамен = %s
-                        """, [student_id, exam_id])
+                        cursor.execute("DELETE FROM электронный_журнал WHERE id_студ = %s AND id_экзамен = %s", [student_id, exam_id])
                 elif grade:
                     if not (grade == 'Н' or (grade.isdigit() and 1 <= int(grade) <= 5)):
                         return jsonify({

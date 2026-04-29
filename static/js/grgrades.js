@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } else { 
         loadGroupGrades();
     }
+    setupRatingEventListeners();
 });
 
 let ratingDisciplines = [];
@@ -20,7 +21,9 @@ function setupEventListeners() {
             }
         });
     }
+}
 
+function setupRatingEventListeners() {
     const prevBtn = document.getElementById('ratingPrevBtn');
     const nextBtn = document.getElementById('ratingNextBtn');
     if (prevBtn) prevBtn.addEventListener('click', () => flipRating(-1));

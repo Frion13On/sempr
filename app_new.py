@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from flask import Flask, jsonify
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect, generate_csrf
@@ -28,7 +30,7 @@ def create_app():
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', '0') == '1'
-    app.config['WTF_CSRF_TIME_LIMIT'] = 60 * 60 * 2  # 2 hours
+    app.config['WTF_CSRF_TIME_LIMIT'] = 60 * 60 * 2 
     
     csrf = CSRFProtect()
     csrf.init_app(app)

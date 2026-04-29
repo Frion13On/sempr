@@ -40,13 +40,18 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 console.log('Received data:', data); // Debug
-                if (!data.numberOfLessons || !data.students || data.students.length === 0) {
+                if (!data.students || data.students.length === 0) {
                     showEmptyStateForTable(gradesTable, emptyState);
                     return;
                 }
 
                 hideEmptyStateForTable(gradesTable, emptyState);
-                createGradeTable(data.numberOfLessons, data.students);
+                const lessonsFromApi = Number(data.numberOfLessons);
+                const fallbackLessons = inferLessonsCount(data.students);
+                const numberOfLessons = Number.isInteger(lessonsFromApi) && lessonsFromApi > 0
+                    ? lessonsFromApi
+                    : fallbackLessons;
+                createGradeTable(numberOfLessons, data.students);
             })
             .catch(error => {
                 console.error('Error loading grade table:', error);
@@ -119,6 +124,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         tbody.querySelectorAll('.grade-input').forEach(applyGradeColorForInputElement);
+    }
+
+    function inferLessonsCount(students) {
+        let maxLesson = 0;
+        students.forEach(student => {
+            const grades = student && student.grades ? student.grades : {};
+            Object.keys(grades).forEach((lessonKey) => {
+                const n = Number.parseInt(lessonKey, 10);
+                if (!Number.isNaN(n)) {
+                    maxLesson = Math.max(maxLesson, n);
+                }
+            });
+        });
+        return maxLesson > 0 ? maxLesson : 1;
     }
 
     function calculateAbsences(grades) {

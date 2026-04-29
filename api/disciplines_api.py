@@ -102,12 +102,7 @@ def delete_discipline(id):
 def get_discipline_assignments():
     try:
         search = request.args.get('search', '')
-        base_query = """
-            SELECT п.фио_преп, д.название
-            FROM преподаватели п
-            INNER JOIN дисц_преп дп ON п.id_преп = дп.id_преп
-            INNER JOIN дисциплина д ON дп.id_дисц = д.id_дисц
-        """
+        base_query = "SELECT п.фио_преп, д.название FROM преподаватели п INNER JOIN дисц_преп дп ON п.id_преп = дп.id_преп INNER JOIN дисциплина д ON дп.id_дисц = д.id_дисц"
         params = []
         if search:
             base_query += "\n            WHERE п.фио_преп ILIKE %s OR д.название ILIKE %s\n"
@@ -174,11 +169,7 @@ def remove_assignment():
         if not data or 'ФИО_преп' not in data or 'Название' not in data:
             return jsonify({'success': False, 'error': 'Missing required data'}), 400
 
-        query = """
-            DELETE FROM дисц_преп
-            WHERE id_преп = (SELECT id_преп FROM преподаватели WHERE фио_преп = %s)
-            AND id_дисц = (SELECT id_дисц FROM дисциплина WHERE название = %s)
-        """
+        query = "DELETE FROM дисц_преп WHERE id_преп = (SELECT id_преп FROM преподаватели WHERE фио_преп = %s) AND id_дисц = (SELECT id_дисц FROM дисциплина WHERE название = %s)"
         
         with get_db_connection() as conn:
             cursor = conn.cursor()

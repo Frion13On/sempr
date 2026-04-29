@@ -140,21 +140,15 @@ def delete_department(department_name):
 @require_roles(1, 2, 3)
 def get_faculties():
     try:
-        query = """
-            SELECT назв_факультет, декан, должность_ф, почта_ф, тел_ф
-            FROM факультет
-            ORDER BY назв_факультет
-        """
+        query = "SELECT назв_факультет, декан, должность_ф, почта_ф, тел_ф FROM факультет ORDER BY назв_факультет"
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query)
-            columns = [column[0] for column in cursor.description]
+            desc = cursor.description or []
+            columns = [column[0] for column in desc]
             results = []
             for row in cursor.fetchall():
-                result = {}
-                for i, value in enumerate(row):
-                    result[columns[i]] = value
-                results.append(result)
+                results.append({columns[i]: row[i] for i in range(len(columns))})
             return jsonify(results)
     except Exception as e:
         print(f"Error in get_faculties: {str(e)}")
@@ -208,12 +202,7 @@ def update_faculty(faculty_name):
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
-                UPDATE факультет 
-                SET назв_факультет = %s, декан = %s, должность_ф = %s, 
-                    почта_ф = %s, тел_ф = %s
-                WHERE назв_факультет = %s
-            """, [
+            cursor.execute("UPDATE факультет SET назв_факультет = %s, декан = %s, должность_ф = %s, почта_ф = %s, тел_ф = %s WHERE назв_факультет = %s", [
                 data['Назв_факультет'],
                 data['Декан'],
                 data['Должность_ф'],

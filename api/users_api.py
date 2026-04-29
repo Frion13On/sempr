@@ -10,7 +10,6 @@ from api_access import require_roles
 
 users_api = Blueprint('users_api', __name__)
 
-# Роли: 1 — администратор, 2 — преподаватель, 3 — студент
 _ROLE_BY_TABLE = {'администраторы': 1, 'преподаватели': 2, 'студенты': 3}
 
 _EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
@@ -57,7 +56,6 @@ def _validate_and_filter_user_payload(table: str, payload: dict, *, require_pass
     if require_password and str(data.get(login_key, '')) == str(data.get(pass_key, '')):
         return False, 'Логин и пароль не должны совпадать', None
 
-    # Проверка сложности пароля
     if pass_key and data.get(pass_key):
         ok, err = is_strong_password(str(data[pass_key]))
         if not ok:
@@ -78,7 +76,6 @@ def _validate_and_filter_user_payload(table: str, payload: dict, *, require_pass
     return True, None, data
 
 def _role_table_columns(table: str):
-    """Колонки только по таблице роли (без логин/пароль)."""
     if table == 'администраторы':
         return ['фио_адм']
     if table == 'преподаватели':
