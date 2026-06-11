@@ -20,7 +20,10 @@ class User(UserMixin):
 
 def get_db_connection():
     try:
-        conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+        database_url = os.getenv('DATABASE_URL', '')
+        if database_url.startswith('postgres://'):
+            database_url = 'postgresql://' + database_url[len('postgres://'):]
+        conn = psycopg2.connect(database_url)
         return conn
     except Exception as e:
         print(f"Database connection error: {str(e)}")
